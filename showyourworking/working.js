@@ -1,6 +1,8 @@
 var btn = document.getElementById('btnMultiply');
 btn.addEventListener("click", startmultiply, false);
 
+//todo: reverse the numbers.
+
 function startmultiply()
 {
     var table = document.getElementById('sum');
@@ -47,34 +49,91 @@ function startmultiply()
 	n1 += extraZero
     }
 
-    firstnumbers = n1.split('');
-    secondnumbers = n2.split('');
+    firstnumbers = n1.split('').reverse();
+    secondnumbers = n2.split('').reverse();
+
     var width = firstnumbers.length + secondnumbers.length
     if(n1.contains('.') || n2.contains('.'))
     {
 	width--;
     }
 
-    var firstrow = table.insertRow();
-    for(var i = 0; i < width; i++)
+    placeDigits(table, firstnumbers, width);
+    placeDigits(table, secondnumbers, width);
+
+    var allparts = [];
+    var pastdp1 = false;
+
+    for(var fnindex in firstnumbers)
     {
-	var c = firstrow.insertCell();
-	if(width - i <= firstnumbers.length)
+	if(firstnumbers[fnindex] != '.')
 	{
-	    var place = firstnumbers.length - (width - i);
-	    c.innerHTML = firstnumbers[place];
+	    var newrow = table.insertRow();
+	    var parts = [];
+	    var fn = parseInt(firstnumbers[fnindex], 10);
+	    var rem = 0;
+	    for(var n = 0; n < fnindex; n++)
+	    {
+		parts.push(0);
+	    }
+	    if(pastdp1)
+	    {
+		parts.pop();
+	    }
+	    for(var snindex in secondnumbers)
+	    {
+		if(secondnumbers[snindex] != '.')
+		{
+		    var sn = parseInt(secondnumbers[snindex], 10);
+		    var result = (sn*fn) + rem;
+		    parts.push((result)%10)
+		    rem = Math.floor(result/10);
+		}
+	    }
+	    if(rem > 0)
+	    {
+		parts.push(rem);
+	    }
+	    allparts.push(parts);
+	    placeDigits(table, parts, width);
+	}
+	else
+	{
+	    pastdp1 = true;
 	}
     }
 
-    var secondrow = table.insertRow();
+    table.insertRow();
+
+    var sums = [];
+    var rem = 0;
+    for(var pi = 0; pi < allparts[allparts.length - 1].length; pi++)
+    {
+	var sum = 0;
+	for(var partindex in allparts)
+	{
+	    if(allparts[partindex].length > pi)
+	    {
+		sum += allparts[partindex][pi]
+	    }
+	}
+	sum += rem;
+	var val = sum % 10;
+	rem = Math.floor(sum / 10);
+	sums.push(val);
+    }
+    placeDigits(table, sums, width);
+}
+
+function placeDigits(table, digits, width)
+{
+    var row = table.insertRow();
     for(var i = 0; i < width; i++)
     {
-	var c = secondrow.insertCell();
-	if(width - i <= secondnumbers.length)
+	var c = row.insertCell();
+	if(width - i - 1 < digits.length)
 	{
-	    var place = secondnumbers.length - (width - i);
-	    c.innerHTML = secondnumbers[place];
+	    c.innerHTML = digits[width - i - 1];
 	}
     }
-
 }
