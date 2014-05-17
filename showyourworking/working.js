@@ -180,6 +180,11 @@ function placeDigits(table, digits, width, dptotal, negative)
 
     if(negative)
     {
-	table.rows[table.rows.length - 1].cells[width - (digits.length + 2)].innerHTML = '-';
+	var negidx = width - (digits.length + 1);
+	if(dptotal > 0)
+	{
+	    negidx--;
+	}
+	table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
     }
 }
