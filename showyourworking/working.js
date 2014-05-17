@@ -1,6 +1,17 @@
 var btn = document.getElementById('btnMultiply');
 btn.addEventListener("click", startmultiply, false);
 
+if(''.contains == undefined)
+{
+    String.prototype.contains = function(other)
+    {
+	if(other.length > this.length)
+	    return false;
+
+	return this.indexOf(other) != -1;
+    }
+}
+
 function startmultiply()
 {
     var table = document.getElementById('sum');
@@ -109,7 +120,7 @@ function startmultiply()
     for(var e = 0; e < width; e++)
     {
 	var c = empty.insertCell();
-	c.innerHTML = '&nbsp;';
+	c.innerHTML = '&#151;';
     }
 
     var sums = [];
