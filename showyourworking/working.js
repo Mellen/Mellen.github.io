@@ -1,8 +1,6 @@
 var btn = document.getElementById('btnMultiply');
 btn.addEventListener("click", startmultiply, false);
 
-//todo: reverse the numbers.
-
 function startmultiply()
 {
     var table = document.getElementById('sum');
@@ -30,8 +28,11 @@ function startmultiply()
 	dp2 = small.length;
     }
 
+    var totaldp = dp1 + dp2;
+
     if(dp1 > dp2)
     {
+	totaldp = dp1*2;
 	var extraZero = '0'.repeat(dp1 - dp2)
 	if(!n2.contains('.'))
 	{
@@ -41,6 +42,7 @@ function startmultiply()
     }
     else if(dp2 > dp1)
     {
+	totaldp = dp2*2;
 	var extraZero = '0'.repeat(dp2 - dp1)
 	if(!n1.contains('.'))
 	{
@@ -58,8 +60,8 @@ function startmultiply()
 	width--;
     }
 
-    placeDigits(table, firstnumbers, width);
-    placeDigits(table, secondnumbers, width);
+    placeDigits(table, firstnumbers, width, 0);
+    placeDigits(table, secondnumbers, width, 0);
 
     var allparts = [];
     var pastdp1 = false;
@@ -95,7 +97,7 @@ function startmultiply()
 		parts.push(rem);
 	    }
 	    allparts.push(parts);
-	    placeDigits(table, parts, width);
+	    placeDigits(table, parts, width, totaldp);
 	}
 	else
 	{
@@ -103,7 +105,12 @@ function startmultiply()
 	}
     }
 
-    table.insertRow();
+    var empty = table.insertRow();
+    for(var e = 0; e < width; e++)
+    {
+	var c = empty.insertCell();
+	c.innerHTML = '&nbsp;';
+    }
 
     var sums = [];
     var rem = 0;
@@ -122,11 +129,15 @@ function startmultiply()
 	rem = Math.floor(sum / 10);
 	sums.push(val);
     }
-    placeDigits(table, sums, width);
+    placeDigits(table, sums, width, totaldp);
 }
 
-function placeDigits(table, digits, width)
+function placeDigits(table, digits, width, dptotal)
 {
+    if(dptotal != 0 && digits.length <= dptotal)
+    {
+	digits = digits.concat('0'.repeat((dptotal - digits.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
+    }
     var row = table.insertRow();
     for(var i = 0; i < width; i++)
     {
@@ -135,5 +146,12 @@ function placeDigits(table, digits, width)
 	{
 	    c.innerHTML = digits[width - i - 1];
 	}
+    }
+
+    if(dptotal != 0)
+    {
+	var c = row.insertCell(width-dptotal);
+	c.innerHTML = '.';
+	row.deleteCell(0);
     }
 }
