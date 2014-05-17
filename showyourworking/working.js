@@ -116,10 +116,10 @@ function startmultiply()
 	}
     }
 
-    var empty = table.insertRow();
+    var empty = table.insertRow(-1);
     for(var e = 0; e < width; e++)
     {
-	var c = empty.insertCell();
+	var c = empty.insertCell(-1);
 	c.innerHTML = '&#151;';
     }
 
@@ -149,10 +149,10 @@ function placeDigits(table, digits, width, dptotal)
     {
 	digits = digits.concat('0'.repeat((dptotal - digits.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
     }
-    var row = table.insertRow();
+    var row = table.insertRow(-1);
     for(var i = 0; i < width; i++)
     {
-	var c = row.insertCell();
+	var c = row.insertCell(-1);
 	if(width - i - 1 < digits.length)
 	{
 	    c.innerHTML = digits[width - i - 1];
