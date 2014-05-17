@@ -62,6 +62,8 @@ function startmultiply()
 	n1 += extraZero
     }
 
+    var negative = (n1.indexOf('-') == 0 && n2.indexOf('-') != 0) || (n2.indexOf('-') == 0 && n1.indexOf('-') != 0)
+
     firstnumbers = n1.split('').reverse();
     secondnumbers = n2.split('').reverse();
 
@@ -70,9 +72,19 @@ function startmultiply()
     {
 	width--;
     }
+    if(n1.contains('-') && n2.contains('-'))
+    {
+	width -= 2;
+    }
 
-    placeDigits(table, firstnumbers, width, 0);
-    placeDigits(table, secondnumbers, width, 0);
+    placeDigits(table, firstnumbers, width, 0, false);
+    placeDigits(table, secondnumbers, width, 0, false);
+
+    firstnumbers = firstnumbers.filter(function(n){ return n != '-'; });
+    secondnumbers = secondnumbers.filter(function(n){ return n != '-'; });
+
+    var c = table.rows[1].cells[0];
+    c.innerHTML = '&times;';
 
     var allparts = [];
     var pastdp1 = false;
@@ -108,7 +120,7 @@ function startmultiply()
 		parts.push(rem);
 	    }
 	    allparts.push(parts);
-	    placeDigits(table, parts, width, totaldp);
+	    placeDigits(table, parts, width, totaldp, negative);
 	}
 	else
 	{
@@ -140,10 +152,10 @@ function startmultiply()
 	rem = Math.floor(sum / 10);
 	sums.push(val);
     }
-    placeDigits(table, sums, width, totaldp);
+    placeDigits(table, sums, width, totaldp, negative);
 }
 
-function placeDigits(table, digits, width, dptotal)
+function placeDigits(table, digits, width, dptotal, negative)
 {
     if(dptotal != 0 && digits.length <= dptotal)
     {
@@ -164,5 +176,10 @@ function placeDigits(table, digits, width, dptotal)
 	var c = row.insertCell(width-dptotal);
 	c.innerHTML = '.';
 	row.deleteCell(0);
+    }
+
+    if(negative)
+    {
+	table.rows[table.rows.length - 1].cells[width - (digits.length + 2)].innerHTML = '-';
     }
 }
