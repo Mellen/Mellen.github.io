@@ -136,12 +136,6 @@ function startmultiply()
     startAnimation(table, firstnumbers, secondnumbers, allparts, width, negative, totaldp);
 
 /*
-    var empty = table.insertRow(-1);
-    for(var e = 0; e < width; e++)
-    {
-	var c = empty.insertCell(-1);
-	c.innerHTML = '&#151;';
-    }
 
     var sums = [];
     var rem = 0;
@@ -167,7 +161,7 @@ function startmultiply()
 function startAnimation(table, firstnumbers, secondnumbers, allParts, width, negative, totaldp)
 {
     var row = table.insertRow(-1);
-    setTimeout(multiplicationStep, 1, table, row, firstnumbers, secondnumbers, allParts, 0, 0, 0, 0, width, negative, totaldp);
+    multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, 0, 0, 0, 0, width, negative, totaldp);
 }
 
 function multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp)
@@ -177,6 +171,10 @@ function multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, f
     if(width - position - 1 < allParts[apIndex].length)
     {
 	c.innerHTML = allParts[apIndex][width - position - 1];
+    }
+    else
+    {
+	c.innerHTML = '&nbsp;'
     }
 
     position++;
@@ -212,6 +210,82 @@ function multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, f
     if(apIndex < allParts.length)
     {
 	setTimeout(multiplicationStep, 200, table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp);
+    }
+    else
+    {
+	startAddition(table, width, allParts, negative, totaldp);
+    }
+}
+
+function startAddition(table, width, allParts, negative, totaldp)
+{
+    var empty = table.insertRow(-1);
+    for(var e = 0; e < width; e++)
+    {
+	var c = empty.insertCell(-1);
+	c.innerHTML = '&#151;';
+    }
+
+    var sums = [];
+    var rem = 0;
+    for(var pi = 0; pi < allParts[allParts.length - 1].length; pi++)
+    {
+	var sum = 0;
+	for(var partindex in allParts)
+	{
+	    if(allParts[partindex].length > pi)
+	    {
+		sum += allParts[partindex][pi]
+	    }
+	}
+	sum += rem;
+	var val = sum % 10;
+	rem = Math.floor(sum / 10);
+	sums.push(val);
+    }
+
+    var row = table.insertRow(-1);
+
+    additionStep(row, sums, width, negative, totaldp, 0);
+}
+
+function additionStep(row, sums, width, negative, totaldp, position)
+{
+    var c = row.insertCell(-1);
+    if(width - position - 1 < sums.length)
+    {
+	c.innerHTML = sums[width - position - 1];
+    }
+    else
+    {
+	c.innerHTML = '&nbsp;';
+    }
+
+    position++;
+
+    if(position == width)
+    {
+	if(totaldp != 0)
+	{
+	    var c = row.insertCell(width-totaldp);
+	    c.innerHTML = '.';
+	    row.deleteCell(0);
+	}
+
+	if(negative)
+	{
+	    var negidx = width - (allParts[apIndex].length + 1);
+	    if(totaldp > 0)
+	    {
+		negidx--;
+	    }
+	    table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
+	}
+	
+    }
+    else
+    {
+	setTimeout(additionStep, 200, row, sums, width, negative, totaldp, position);
     }
 }
 
