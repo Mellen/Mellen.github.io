@@ -77,8 +77,8 @@ function startmultiply()
 	width -= 2;
     }
 
-    placeDigits(table, firstnumbers, width, 0, false);
-    placeDigits(table, secondnumbers, width, 0, false);
+    placeDigits(table, firstnumbers, width);
+    placeDigits(table, secondnumbers, width);
 
     firstnumbers = firstnumbers.filter(function(n){ return n != '-'; });
     secondnumbers = secondnumbers.filter(function(n){ return n != '-'; });
@@ -119,8 +119,13 @@ function startmultiply()
 	    {
 		parts.push(rem);
 	    }
+	    
+	    if(totaldp != 0 && parts.length <= totaldp)
+	    {
+		parts = parts.concat('0'.repeat((totaldp - parts.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
+	    }
+
 	    allparts.push(parts);
-	    placeDigits(table, parts, width, totaldp, negative);
 	}
 	else
 	{
@@ -128,6 +133,9 @@ function startmultiply()
 	}
     }
 
+    startAnimation(table, firstnumbers, secondnumbers, allparts, width, negative, totaldp);
+
+/*
     var empty = table.insertRow(-1);
     for(var e = 0; e < width; e++)
     {
@@ -153,14 +161,62 @@ function startmultiply()
 	sums.push(val);
     }
     placeDigits(table, sums, width, totaldp, negative);
+*/
 }
 
-function placeDigits(table, digits, width, dptotal, negative)
+function startAnimation(table, firstnumbers, secondnumbers, allParts, width, negative, totaldp)
 {
-    if(dptotal != 0 && digits.length <= dptotal)
+    var row = table.insertRow(-1);
+    setTimeout(multiplicationStep, 1, table, row, firstnumbers, secondnumbers, allParts, 0, 0, 0, 0, width, negative, totaldp);
+}
+
+function multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp)
+{
+    var c = row.insertCell(-1);
+
+    if(width - position - 1 < allParts[apIndex].length)
     {
-	digits = digits.concat('0'.repeat((dptotal - digits.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
+	c.innerHTML = allParts[apIndex][width - position - 1];
     }
+
+    position++;
+
+    if(position == width)
+    {
+	position = 0;
+	
+	if(totaldp != 0)
+	{
+	    var c = row.insertCell(width-totaldp);
+	    c.innerHTML = '.';
+	    row.deleteCell(0);
+	}
+
+	if(negative)
+	{
+	    var negidx = width - (allParts[apIndex].length + 1);
+	    if(totaldp > 0)
+	    {
+		negidx--;
+	    }
+	    table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
+	}
+
+	apIndex++;
+	if(apIndex < allParts.length)
+	{
+	    row = table.insertRow(-1);
+	}
+    }
+
+    if(apIndex < allParts.length)
+    {
+	setTimeout(multiplicationStep, 200, table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp);
+    }
+}
+
+function placeDigits(table, digits, width)
+{
     var row = table.insertRow(-1);
     for(var i = 0; i < width; i++)
     {
@@ -169,22 +225,5 @@ function placeDigits(table, digits, width, dptotal, negative)
 	{
 	    c.innerHTML = digits[width - i - 1];
 	}
-    }
-
-    if(dptotal != 0)
-    {
-	var c = row.insertCell(width-dptotal);
-	c.innerHTML = '.';
-	row.deleteCell(0);
-    }
-
-    if(negative)
-    {
-	var negidx = width - (digits.length + 1);
-	if(dptotal > 0)
-	{
-	    negidx--;
-	}
-	table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
     }
 }
