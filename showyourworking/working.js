@@ -211,7 +211,7 @@ function multiplicationStep(table, rowIndex, allParts, fnIndex, snIndex, apIndex
 
     if(apIndex < allParts.length)
     {
-	setTimeout(multiplicationStep, 200, table, rowIndex, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp);
+	setTimeout(multiplicationStep, 200, table, rowIndex, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp);
     }
     else
     {
@@ -233,61 +233,51 @@ function startAddition(table, width, allParts, negative, totaldp)
     for(var pi = 0; pi < allParts[allParts.length - 1].length; pi++)
     {
 	var sum = 0;
+	var skippush = true;
 	for(var partindex in allParts)
 	{
-	    if(allParts[partindex].length > pi)
+	    if(allParts[partindex].length > pi && allParts[partindex][pi] != '.' && allParts[partindex][pi] != '-')
 	    {
-		sum += allParts[partindex][pi]
+		sum += allParts[partindex][pi];
+		skippush = false;
 	    }
-	}
-	sum += rem;
-	var val = sum % 10;
-	rem = Math.floor(sum / 10);
-	sums.push(val);
-    }
-
-    var row = table.insertRow(-1);
-
-    additionStep(row, sums, width, negative, totaldp, 0);
-}
-
-function additionStep(row, sums, width, negative, totaldp, position)
-{
-    var c = row.insertCell(-1);
-    if(width - position - 1 < sums.length)
-    {
-	c.innerHTML = sums[width - position - 1];
-    }
-    else
-    {
-	c.innerHTML = '&nbsp;';
-    }
-
-    position++;
-
-    if(position == width)
-    {
-	if(totaldp != 0)
-	{
-	    var c = row.insertCell(width-totaldp);
-	    c.innerHTML = '.';
-	    row.deleteCell(0);
-	}
-
-	if(negative)
-	{
-	    var negidx = width - (allParts[apIndex].length + 1);
-	    if(totaldp > 0)
-	    {
-		negidx--;
-	    }
-	    table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
 	}
 	
+	if(!skippush)
+	{
+	    sum += rem;
+	    var val = sum % 10;
+	    rem = Math.floor(sum / 10);
+	    sums.push(val);
+	}
+
+	if(sums.length == totaldp && totaldp > 0)
+	{
+	    sums.push('.');
+	}
     }
-    else
+
+    if(negative)
     {
-	setTimeout(additionStep, 200, row, sums, width, negative, totaldp, position);
+	sums.push('-');
+    }
+
+    createEmptyRow(table, width);
+
+    row = table.rows[table.rows.length - 1];
+
+    additionStep(row, sums, width, width);
+}
+
+function additionStep(row, sums, width, position)
+{
+    position--;
+
+    row.cells[position].innerHTML = sums[width - (position + 1)];
+
+    if(position > (width - sums.length))
+    {
+	setTimeout(additionStep, 200, row, sums, width, position);
     }
 }
 
