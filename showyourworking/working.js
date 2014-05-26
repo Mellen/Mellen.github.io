@@ -100,7 +100,6 @@ function startmultiply()
     {
 	if(firstnumbers[fnindex] != '.')
 	{
-	    var newrow = table.insertRow();
 	    var parts = [];
 	    var fn = parseInt(firstnumbers[fnindex], 10);
 	    var rem = 0;
@@ -121,11 +120,8 @@ function startmultiply()
 		    parts.push((result)%10)
 		    rem = Math.floor(result/10);
 		}
-		if(parts.length == totaldp)
-		{
-		    parts.push('.');
-		}
 	    }
+	   
 	    if(rem > 0)
 	    {
 		parts.push(rem);
@@ -133,8 +129,15 @@ function startmultiply()
 	    
 	    if(totaldp > 0 && parts.length <= totaldp)
 	    {
-		parts = parts.concat('0'.repeat((totaldp - parts.length)+2).split('').map(function(z){ return parseInt(z, 10); }));
-		parts[1] = '.';
+		parts = parts.concat('0'.repeat((totaldp - parts.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
+	    }
+
+	    if(totaldp > 0)
+	    {
+		dp = ['.'];
+		beforedp = parts.slice(0, totaldp);
+		afterdp = parts.slice(totaldp, parts.length);
+		parts = beforedp.concat(dp.concat(afterdp));
 	    }
 
 	    if(negative)
@@ -151,28 +154,6 @@ function startmultiply()
     }
 
     startAnimation(table, firstnumbers, secondnumbers, allparts, width, negative, totaldp);
-
-/*
-
-    var sums = [];
-    var rem = 0;
-    for(var pi = 0; pi < allparts[allparts.length - 1].length; pi++)
-    {
-	var sum = 0;
-	for(var partindex in allparts)
-	{
-	    if(allparts[partindex].length > pi)
-	    {
-		sum += allparts[partindex][pi]
-	    }
-	}
-	sum += rem;
-	var val = sum % 10;
-	rem = Math.floor(sum / 10);
-	sums.push(val);
-    }
-    placeDigits(table, sums, width, totaldp, negative);
-*/
 }
 
 function startAnimation(table, firstnumbers, secondnumbers, allParts, width, negative, totaldp)
