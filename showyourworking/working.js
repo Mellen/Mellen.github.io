@@ -1,5 +1,6 @@
 var btn = document.getElementById('btnMultiply');
 btn.addEventListener("click", startmultiply, false);
+speed = 500;
 
 if(''.contains == undefined)
 {
@@ -86,135 +87,214 @@ function startmultiply()
     var c = table.rows[1].cells[0];
     c.innerHTML = '&times;';
 
-    var allparts = [];
-    var pastdp1 = false;
-
-    for(var fnindex in firstnumbers)
+    var empty = table.insertRow(-1);
+    for(var e = 0; e < width; e++)
     {
-	if(firstnumbers[fnindex] != '.')
+	var c = empty.insertCell(-1);
+	c.innerHTML = '&#151;';
+    }
+
+    startAnimation(table, firstnumbers, secondnumbers, width, negative, totaldp);
+}
+
+function startAnimation(table, firstnumbers, secondnumbers, width, negative, totaldp)
+{
+    createEmptyRow(table, width);
+    multiplicationStep(table, table.rows.length - 1, firstnumbers, secondnumbers, [], [], 0, 0, width - 1, width, negative, totaldp);
+}
+
+function createEmptyRow(table, width)
+{
+    var row = table.insertRow(-1);
+
+    for(var r = 0; r < width; r++)
+    {
+	var c = row.insertCell(-1);
+	c.innerHTML = '&nbsp;';
+    }
+}
+
+function multiplicationStep(table, rowIndex, firstnumbers, secondnumbers, allParts, part, fnIndex, snIndex, position, width, negative, totaldp)
+{
+    if(secondnumbers[snIndex] != '.')
+    {
+	hilightNumbers(table, width, fnIndex, snIndex);
+	
+	var partResult = document.getElementById('partResult');
+	
+	var pr = firstnumbers[fnIndex] * secondnumbers[snIndex];
+	
+	partResult.innerHTML = pr;
+	
+	partResult.style.top = (table.offsetTop + table.rows[rowIndex].offsetTop + 1) + 'px';
+	partResult.style.left = (table.offsetLeft + table.rows[rowIndex].offsetLeft + table.rows[rowIndex].offsetWidth + 5) + 'px';
+
+	var expectedLength = 0;
+
+	if(part.length == 0)
 	{
-	    var newrow = table.insertRow();
-	    var parts = [];
-	    var fn = parseInt(firstnumbers[fnindex], 10);
-	    var rem = 0;
-	    for(var n = 0; n < fnindex; n++)
+	    if((firstnumbers.indexOf('.') > -1) && (firstnumbers.indexOf('.') < fnIndex))
 	    {
-		parts.push(0);
+		part.unshift(pr * Math.pow(10, fnIndex-1));
 	    }
-	    if(pastdp1)
+	    else
 	    {
-		parts.pop();
-	    }
-	    for(var snindex in secondnumbers)
-	    {
-		if(secondnumbers[snindex] != '.')
-		{
-		    var sn = parseInt(secondnumbers[snindex], 10);
-		    var result = (sn*fn) + rem;
-		    parts.push((result)%10)
-		    rem = Math.floor(result/10);
-		}
-	    }
-	    if(rem > 0)
-	    {
-		parts.push(rem);
-	    }
-	    
-	    if(totaldp != 0 && parts.length <= totaldp)
-	    {
-		parts = parts.concat('0'.repeat((totaldp - parts.length)+1).split('').map(function(z){ return parseInt(z, 10); }));
+		part.unshift(pr * Math.pow(10, fnIndex));
 	    }
 
-	    allparts.push(parts);
+	    expectedLength = Math.floor(Math.log10(part[0])) + 1;
 	}
 	else
 	{
-	    pastdp1 = true;
+	    part[0] += pr;
+
+	    expectedLength = part.length;
 	}
+	position = splitResultIntoDigits(part, table, rowIndex, position, width, totaldp, true, expectedLength);
+    }
+    
+    snIndex++;
+
+    if(secondnumbers[snIndex] == '.')
+    {
+	snIndex++;
     }
 
-    startAnimation(table, firstnumbers, secondnumbers, allparts, width, negative, totaldp);
-
-/*
-
-    var sums = [];
-    var rem = 0;
-    for(var pi = 0; pi < allparts[allparts.length - 1].length; pi++)
+    if(snIndex < secondnumbers.length)
     {
-	var sum = 0;
-	for(var partindex in allparts)
+	setTimeout(multiplicationStep, speed, table, rowIndex, firstnumbers, secondnumbers, allParts, part, fnIndex, snIndex, position, width, negative, totaldp);
+    }
+    else if(fnIndex < (firstnumbers.length - 1))
+    {
+	if(part.length <= totaldp)
 	{
-	    if(allparts[partindex].length > pi)
+	    while(part.length < totaldp)
 	    {
-		sum += allparts[partindex][pi]
+		part.unshift(0);
+		if(part.length >= (width - position))
+		{
+		    table.rows[rowIndex].cells[position].innerHTML = '0';
+		    position--;
+		}		
 	    }
+	    part.unshift(0);
+	    table.rows[rowIndex].cells[position].innerHTML = '.';
+	    table.rows[rowIndex].cells[position-1].innerHTML = '0';
+
+	    position -= 2;
 	}
-	sum += rem;
-	var val = sum % 10;
-	rem = Math.floor(sum / 10);
-	sums.push(val);
-    }
-    placeDigits(table, sums, width, totaldp, negative);
-*/
-}
-
-function startAnimation(table, firstnumbers, secondnumbers, allParts, width, negative, totaldp)
-{
-    var row = table.insertRow(-1);
-    multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, 0, 0, 0, 0, width, negative, totaldp);
-}
-
-function multiplicationStep(table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp)
-{
-    var c = row.insertCell(-1);
-
-    if(width - position - 1 < allParts[apIndex].length)
-    {
-	c.innerHTML = allParts[apIndex][width - position - 1];
-    }
-    else
-    {
-	c.innerHTML = '&nbsp;'
-    }
-
-    position++;
-
-    if(position == width)
-    {
-	position = 0;
-	
-	if(totaldp != 0)
+	else
 	{
-	    var c = row.insertCell(width-totaldp);
-	    c.innerHTML = '.';
-	    row.deleteCell(0);
+	    position--;
 	}
 
 	if(negative)
 	{
-	    var negidx = width - (allParts[apIndex].length + 1);
-	    if(totaldp > 0)
-	    {
-		negidx--;
-	    }
-	    table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
+	    table.rows[rowIndex].cells[position].innerHTML = '-';
 	}
 
-	apIndex++;
-	if(apIndex < allParts.length)
+	position = width - 1;
+	snIndex = 0;
+	fnIndex++;
+	if(firstnumbers[fnIndex] =='.')
 	{
-	    row = table.insertRow(-1);
+	    fnIndex++;
 	}
-    }
-
-    if(apIndex < allParts.length)
-    {
-	setTimeout(multiplicationStep, 200, table, row, firstnumbers, secondnumbers, allParts, fnIndex, snIndex, apIndex, position, width, negative, totaldp);
+	createEmptyRow(table, width)
+	rowIndex++;
+	allParts.push(part);
+	setTimeout(multiplicationStep, speed, table, rowIndex, firstnumbers, secondnumbers, allParts, [], fnIndex, snIndex, position, width, negative, totaldp);
     }
     else
     {
+	if(part.length <= totaldp)
+	{
+	    while(part.length < totaldp)
+	    {
+		part.unshift(0);
+		if(part.length >= (width - position))
+		{
+		    table.rows[rowIndex].cells[position].innerHTML = '0';
+		    position--;
+		}		
+	    }
+	    part.unshift(0);
+	    table.rows[rowIndex].cells[position].innerHTML = '.';
+	    table.rows[rowIndex].cells[position-1].innerHTML = '0';
+	    position -= 2;
+	}
+	else
+	{
+	    position--;
+	}
+
+	if(negative)
+	{
+	    table.rows[rowIndex].cells[position].innerHTML = '-';
+	}
+	
+	partResult.innerHTML = '';
+	clearAllClasses(table);
+	allParts.push(part);
 	startAddition(table, width, allParts, negative, totaldp);
     }
+}
+
+function splitResultIntoDigits(part, table, rowIndex, position, width, totaldp, firstCycle, expectedLength)
+{
+    if((width - position == (totaldp+1))&&(totaldp > 0))
+    {
+	table.rows[rowIndex].cells[position].innerHTML = '.';
+	position--;
+	expectedLength++;
+	position = splitResultIntoDigits(part, table, rowIndex, position, width, totaldp, false, expectedLength);
+    }
+    else if(part[0] < 10)
+    {
+	table.rows[rowIndex].cells[position].innerHTML = part[0];
+	if(firstCycle)
+	{
+	    position--;
+	}
+
+	if(part.length == expectedLength)
+	{
+	    part.unshift(0);
+	}
+    }
+    else
+    {
+	var unit = part[0] % 10;
+	var rem = Math.floor(part[0] / 10);
+	
+	part[0] = unit;
+	table.rows[rowIndex].cells[position].innerHTML = part[0];
+	position--;
+
+	part.unshift(rem);
+
+	position = splitResultIntoDigits(part, table, rowIndex, position, width, totaldp, false, expectedLength);
+    }
+
+    return position;
+}
+
+function clearAllClasses(table)
+{
+    for(var r = 0; r < table.rows.length; r++)
+    {
+	for(var c = 0; c < table.rows[r].cells.length; c++)
+	{
+	    table.rows[r].cells[c].className = '';
+	}
+    }
+}
+
+function hilightNumbers(table, width, fnIndex, snIndex)
+{
+    clearAllClasses(table);
+    table.rows[0].cells[width - (fnIndex+1)].className = 'fnsel';
+    table.rows[1].cells[width - (snIndex+1)].className = 'snsel';
 }
 
 function startAddition(table, width, allParts, negative, totaldp)
@@ -231,61 +311,51 @@ function startAddition(table, width, allParts, negative, totaldp)
     for(var pi = 0; pi < allParts[allParts.length - 1].length; pi++)
     {
 	var sum = 0;
+	var skippush = true;
 	for(var partindex in allParts)
 	{
-	    if(allParts[partindex].length > pi)
+	    if(allParts[partindex].length > pi && allParts[partindex][pi] != '.' && allParts[partindex][pi] != '-')
 	    {
-		sum += allParts[partindex][pi]
+		sum += allParts[partindex][pi];
+		skippush = false;
 	    }
-	}
-	sum += rem;
-	var val = sum % 10;
-	rem = Math.floor(sum / 10);
-	sums.push(val);
-    }
-
-    var row = table.insertRow(-1);
-
-    additionStep(row, sums, width, negative, totaldp, 0);
-}
-
-function additionStep(row, sums, width, negative, totaldp, position)
-{
-    var c = row.insertCell(-1);
-    if(width - position - 1 < sums.length)
-    {
-	c.innerHTML = sums[width - position - 1];
-    }
-    else
-    {
-	c.innerHTML = '&nbsp;';
-    }
-
-    position++;
-
-    if(position == width)
-    {
-	if(totaldp != 0)
-	{
-	    var c = row.insertCell(width-totaldp);
-	    c.innerHTML = '.';
-	    row.deleteCell(0);
-	}
-
-	if(negative)
-	{
-	    var negidx = width - (allParts[apIndex].length + 1);
-	    if(totaldp > 0)
-	    {
-		negidx--;
-	    }
-	    table.rows[table.rows.length - 1].cells[negidx].innerHTML = '-';
 	}
 	
+	if(!skippush)
+	{
+	    sum += rem;
+	    var val = sum % 10;
+	    rem = Math.floor(sum / 10);
+	    sums.push(val);
+	}
+
+	if(sums.length == totaldp && totaldp > 0)
+	{
+	    sums.push('.');
+	}
     }
-    else
+
+    if(negative)
     {
-	setTimeout(additionStep, 200, row, sums, width, negative, totaldp, position);
+	sums.push('-');
+    }
+
+    createEmptyRow(table, width);
+
+    row = table.rows[table.rows.length - 1];
+
+    additionStep(row, sums, width, width);
+}
+
+function additionStep(row, sums, width, position)
+{
+    position--;
+
+    row.cells[position].innerHTML = sums[width - (position + 1)];
+
+    if(position > (width - sums.length))
+    {
+	setTimeout(additionStep, speed, row, sums, width, position);
     }
 }
 
