@@ -66,37 +66,50 @@ function getColour(pixels, colourField, colour)
 
 function setEdges(edges, colourField)
 {
-    var stdDevs = [];
+    var stdDev = 0;
     var pixelCount = colourField.width * colourField.height;
-    for(var colour = red; colour <= blue; colour++)
+    var colourScore = 0;
+    for(var pi = 0; pi < colourField.data.length; pi++)
     {
-	var colourScore = 0;
-	for(var pi = colour; pi < colourField.data.length - colour; pi += 4)
+	if(pi%4 != 3)
 	{
 	    colourScore += colourField.data[pi];
 	}
-	var mean = colourScore / pixelCount;
-	var distsFromMeanSquared = [];
-	for(var pi = colour; pi < colourField.data.length - colour; pi += 4)
-	{
-	    distsFromMeanSquared.push((colourField.data[pi] - mean) * (colourField.data[pi] - mean));
-	}
-	stdDevs.push(Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length));
     }
+    var mean = colourScore / (pixelCount * 3);
+    var distsFromMeanSquared = [];
+
+    for(var pi = 0; pi < colourField.data.length; pi+=4)
+    {	
+	var whiteVal = colourField.data[pi];
+	whiteVal += colourField.data[pi+1];
+	whiteVal += colourField.data[pi+2];
+	distsFromMeanSquared.push((whiteVal - mean) * (whiteVal - mean));
+    }
+
+    stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
 
     for(var pi = 0; pi < edges.data.length; pi+=4)
     {
 	if(pi % (colourField.width*4) != (colourField.width * 4))
 	{
-	    for(var c = red; c <= blue; c++)
+	    var whiteVal1 = colourField.data[pi];
+	    whiteVal1 += colourField.data[pi+1];
+	    whiteVal1 += colourField.data[pi+2];
+
+	    var whiteVal2 = colourField.data[pi+4];
+	    whiteVal2 += colourField.data[pi+5];
+	    whiteVal2 += colourField.data[pi+6];
+
+	    if(Math.abs(whiteVal1 - whiteVal2) > (stdDev * factor))
 	    {
-		if(Math.abs(colourField.data[pi+c] - colourField.data[pi+4+c]) > (stdDevs[c] * factor))
-		{
-		    var scale = Math.abs(colourField.data[pi+c] - colourField.data[pi+4+c]) / stdDevs[c];
-		    edges.data[pi+c] = Math.floor(255 * scale);
-		}
+		var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+		edges.data[pi] = Math.floor(255 * scale);
+		edges.data[pi+1] = Math.floor(255 * scale);
+		edges.data[pi+2] = Math.floor(255 * scale);
 	    }
+	}
 	    edges.data[pi+3] = 255;
-	}	
-    }
+    }	
 }
+
