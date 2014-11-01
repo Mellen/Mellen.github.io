@@ -2,10 +2,6 @@ var canvas = document.getElementById('canvas');
 var canvEdge = document.getElementById('edges');
 var vid = document.getElementById('vid');
 
-var factor = Number(document.getElementById('txtFactor').value);
-
-document.getElementById('txtFactor').addEventListener('change', function(){factor = Number(this.value);});
-
 var ctx = canvas.getContext('2d');
 var edgeCtx = canvEdge.getContext('2d');
 var localMediaStream = null;
@@ -101,13 +97,10 @@ function setEdges(edges, colourField)
 	    whiteVal2 += colourField.data[pi+5];
 	    whiteVal2 += colourField.data[pi+6];
 
-	    if(Math.abs(whiteVal1 - whiteVal2) > (stdDev * factor))
-	    {
-		var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
-		edges.data[pi] = Math.floor(255 * scale);
-		edges.data[pi+1] = Math.floor(255 * scale);
-		edges.data[pi+2] = Math.floor(255 * scale);
-	    }
+	    var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+	    edges.data[pi] = Math.floor(255 * scale);
+	    edges.data[pi+1] = Math.floor(255 * scale);
+	    edges.data[pi+2] = Math.floor(255 * scale);
 	}
 	edges.data[pi+3] = 255;
     }
@@ -126,13 +119,10 @@ function setEdges(edges, colourField)
 	    whiteVal2 += colourField.data[pi+width + 1];
 	    whiteVal2 += colourField.data[pi+width + 2];
 
-	    if(Math.abs(whiteVal1 - whiteVal2) > (stdDev * factor))
-	    {
-		var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
-		edges.data[pi] += Math.floor(255 * scale);
-		edges.data[pi+1] += Math.floor(255 * scale);
-		edges.data[pi+2] += Math.floor(255 * scale);
-	    }
+	    var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+	    edges.data[pi] += Math.floor(255 * scale);
+	    edges.data[pi+1] += Math.floor(255 * scale);
+	    edges.data[pi+2] += Math.floor(255 * scale);
 	}
 	edges.data[pi+3] = 255;
     }	
