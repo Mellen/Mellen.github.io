@@ -65,22 +65,17 @@ function setEdges(edges, colourField)
     var stdDev = 0;
     var pixelCount = colourField.width * colourField.height;
     var colourScore = 0;
-    for(var pi = 0; pi < colourField.data.length; pi++)
+    for(var pi = 0; pi < colourField.data.length; pi += 4)
     {
-	if(pi%4 != 3)
-	{
-	    colourScore += colourField.data[pi];
-	}
+	colourScore += colourField.data[pi];
     }
-    var mean = colourScore / (pixelCount * 3);
+    var mean = colourScore / pixelCount;
     var distsFromMeanSquared = [];
 
     for(var pi = 0; pi < colourField.data.length; pi+=4)
     {	
-	var whiteVal = colourField.data[pi];
-	whiteVal += colourField.data[pi+1];
-	whiteVal += colourField.data[pi+2];
-	distsFromMeanSquared.push((whiteVal - mean) * (whiteVal - mean));
+	var redVal = colourField.data[pi];
+	distsFromMeanSquared.push((redVal - mean) * (redVal - mean));
     }
 
     stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
@@ -89,15 +84,11 @@ function setEdges(edges, colourField)
     {
 	if(pi % (colourField.width*4) != (colourField.width * 4))
 	{
-	    var whiteVal1 = colourField.data[pi];
-	    whiteVal1 += colourField.data[pi+1];
-	    whiteVal1 += colourField.data[pi+2];
+	    var redVal1 = colourField.data[pi];
 
-	    var whiteVal2 = colourField.data[pi+4];
-	    whiteVal2 += colourField.data[pi+5];
-	    whiteVal2 += colourField.data[pi+6];
+	    var redVal2 = colourField.data[pi+4];
 
-	    var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
 	    edges.data[pi] = Math.floor(255 * scale);
 	    edges.data[pi+1] = Math.floor(255 * scale);
 	    edges.data[pi+2] = Math.floor(255 * scale);
@@ -111,15 +102,11 @@ function setEdges(edges, colourField)
     {
 	if(pi < (edges.data.length - (width)))
 	{
-	    var whiteVal1 = colourField.data[pi];
-	    whiteVal1 += colourField.data[pi+1];
-	    whiteVal1 += colourField.data[pi+2];
+	    var redVal1 = colourField.data[pi];
 
-	    var whiteVal2 = colourField.data[pi+width];
-	    whiteVal2 += colourField.data[pi+width + 1];
-	    whiteVal2 += colourField.data[pi+width + 2];
+	    var redVal2 = colourField.data[pi+width];
 
-	    var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
 	    edges.data[pi] += Math.floor(255 * scale);
 	    edges.data[pi+1] += Math.floor(255 * scale);
 	    edges.data[pi+2] += Math.floor(255 * scale);
