@@ -109,7 +109,32 @@ function setEdges(edges, colourField)
 		edges.data[pi+2] = Math.floor(255 * scale);
 	    }
 	}
-	    edges.data[pi+3] = 255;
+	edges.data[pi+3] = 255;
+    }
+
+    var width = edges.width * 4;
+
+    for(var pi = 0; pi < edges.data.length; pi+=4)
+    {
+	if(pi < (edges.data.length - (width)))
+	{
+	    var whiteVal1 = colourField.data[pi];
+	    whiteVal1 += colourField.data[pi+1];
+	    whiteVal1 += colourField.data[pi+2];
+
+	    var whiteVal2 = colourField.data[pi+width];
+	    whiteVal2 += colourField.data[pi+width + 1];
+	    whiteVal2 += colourField.data[pi+width + 2];
+
+	    if(Math.abs(whiteVal1 - whiteVal2) > (stdDev * factor))
+	    {
+		var scale = Math.abs(whiteVal1 - whiteVal2) / stdDev;
+		edges.data[pi] += Math.floor(255 * scale);
+		edges.data[pi+1] += Math.floor(255 * scale);
+		edges.data[pi+2] += Math.floor(255 * scale);
+	    }
+	}
+	edges.data[pi+3] = 255;
     }	
 }
 
