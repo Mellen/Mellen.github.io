@@ -50,12 +50,7 @@ function capture()
 	var edges = edgeCtx.createImageData(canvEdge.width, canvEdge.height);
 	var redPixels = edgeCtx.createImageData(canvEdge.width, canvEdge.height);
 	getColour(pixels, redPixels, red);
-	/*var arrRed = Array.from(redPixels.data).filter(function(value, index, arr) { return index % 4 == 0; });
-	var mean = arrRed.reduce(function(a,b){ return a+b; }) / arrRed.length;
-	var distFromMeanSquared = arrRed.map(function(a){return (a-mean)*(a-mean);});
-	var stdDev = Math.sqrt(distFromMeanSquared.reduce(function(a,b){ return a+b; }) / distFromMeanSquared.length);*/
 	setEdges(edges, pixels);
-	//calculateEdges(stdDev, redPixels, edges);
 	edgeCtx.putImageData(edges, 0,0);
     }
 }
@@ -102,21 +97,5 @@ function setEdges(edges, colourField)
 	    }
 	    edges.data[pi+3] = 255;
 	}	
-    }
-}
-
-function calculateEdges(stdDev, red, edges)
-{
-    for(var pi = 0; pi < red.data.length; pi += 4)
-    {
-	if(pi % (red.width*4) != (red.width * 4))
-	{
-	    if(Math.abs(red.data[pi] - red.data[pi+4]) > (stdDev * factor))
-	    {
-		edges.data[pi] = 255;
-	    }
-	}
-
-	edges.data[pi+3] = 255;
     }
 }
