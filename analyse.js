@@ -92,7 +92,8 @@ function setEdges(edges, colourField)
 	    {
 		if(Math.abs(colourField.data[pi+c] - colourField.data[pi+4+c]) > (stdDevs[c] * factor))
 		{
-		    edges.data[pi+c] = 255;
+		    var scale = Math.abs(colourField.data[pi+c] - colourField.data[pi+4+c]) / stdDevs[c];
+		    edges.data[pi+c] = Math.floor(255 * scale);
 		}
 	    }
 	    edges.data[pi+3] = 255;
