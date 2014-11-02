@@ -1,0 +1,3 @@
+[submodule "EdgeDetect"]
+	path = EdgeDetect
+	url = ../EdgeDetect
