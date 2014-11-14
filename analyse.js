@@ -43,11 +43,10 @@ function capture()
 	canvEdge.height = vid.clientHeight;
 	ctx.drawImage(vid, 0, 0);
 	var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
-	var edges = edgeCtx.createImageData(canvEdge.width, canvEdge.height);
 	var redPixels = edgeCtx.createImageData(canvEdge.width, canvEdge.height);
 	getColour(pixels, redPixels, red);
-	setEdges(edges, pixels);
-	edgeCtx.putImageData(edges, 0,0);
+	var ratios = calculateRatios(pixels);
+	console.log(ratios);
     }
 }
 
@@ -60,58 +59,80 @@ function getColour(pixels, colourField, colour)
     }
 }
 
-function setEdges(edges, colourField)
+function calculateRatios(colourField)
 {
-    var stdDev = 0;
-    var pixelCount = colourField.width * colourField.height;
-    var colourScore = 0;
-    for(var pi = 0; pi < colourField.data.length; pi += 4)
+    var w = colourField.width;
+    var h = colourField.height;
+
+    var avgs = [];
+    var rowSum = 0;
+
+    for(var i = 0, rp = 0; i < colourField.data.length; i+=4)
     {
-	colourScore += colourField.data[pi];
-    }
-    var mean = colourScore / pixelCount;
-    var distsFromMeanSquared = [];
-
-    for(var pi = 0; pi < colourField.data.length; pi+=4)
-    {	
-	var redVal = colourField.data[pi];
-	distsFromMeanSquared.push((redVal - mean) * (redVal - mean));
-    }
-
-    stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
-
-    for(var pi = 0; pi < edges.data.length; pi+=4)
-    {
-	if(pi % (colourField.width*4) != (colourField.width * 4))
+	if(rp == w)
 	{
-	    var redVal1 = colourField.data[pi];
-
-	    var redVal2 = colourField.data[pi+4];
-
-	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
-	    edges.data[pi] = Math.floor(255 * scale);
-	    edges.data[pi+1] = Math.floor(255 * scale);
-	    edges.data[pi+2] = Math.floor(255 * scale);
+	    avgs.push(rowSum/w);
+	    rowSum = 0;
+	    rp = 0;
 	}
-	edges.data[pi+3] = 255;
+	else
+	{
+	    rowSum += colourField.data[i];
+	    rp++
+	}
     }
 
-    var width = edges.width * 4;
+    var normAvgs = [];
 
-    for(var pi = 0; pi < edges.data.length; pi+=4)
+    var maxAvg = Math.max.apply(null, avgs);
+
+    for(var i = 0; i < avgs.length; i++)
     {
-	if(pi < (edges.data.length - (width)))
+	normAvgs.push(avgs[i]/maxAvg);
+    }
+
+    var threshold = 0.01;
+
+    edgeIndices = []
+    for(var i = 0; i < normAvgs.length - 1; i++)
+    {
+	if ((normAvgs[i] <= threshold && normAvgs[i+1] > threshold) || (normAvgs[i] > threshold && normAvgs[i+1] <= threshold))
 	{
-	    var redVal1 = colourField.data[pi];
-
-	    var redVal2 = colourField.data[pi+width];
-
-	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
-	    edges.data[pi] += Math.floor(255 * scale);
-	    edges.data[pi+1] += Math.floor(255 * scale);
-	    edges.data[pi+2] += Math.floor(255 * scale);
+	    edgeIndices.push(i);
 	}
-	edges.data[pi+3] = 255;
-    }	
+    }
+
+    if(edgeIndices.length < 4)
+    {
+	console.log('not enough edge');
+	return {};
+    }
+
+    var control = getDrop(edgeIndices[0] + 5, edgeIndices[1] - 5)
+    
+    var patient = getDrop(Math.floor(edgeIndices[2] + 0.50 * (edgeIndices[3] - edgeIndices[2])), Math.floor(edgeIndices[2] + 0.80 * (edgeIndices[3] - edgeIndices[2])));
+   
+    var ratio = patient / control * 100
+
+    return { 'normalised_drop_percent': ratio, 'level': Math.floor(ratio / 20.0) };
 }
 
+
+function getDrop(x, y, normAvgs)
+{
+    var width = y - x;
+
+    console.log(normAvgs);
+
+    var minInControlStrip = Math.min.apply(null, normAvgs.splice(x, width));
+
+    var minControlPosn = normAvgs.indexOf(minInControlStrip) + x;
+
+    var controlStripHeight = normAvgs[y] - norAvgs[x];
+
+    var proportionIntoControlStrip = (minControlPosn - x) / width;
+
+    var calculatedValueAtMinPosn = normAvgs[x] + proportionIntoControlStrip * controlStripHeight;
+
+    return (calculatedValueAtMinPosn - minInControlStrip);
+}
