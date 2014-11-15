@@ -1,6 +1,8 @@
 var canvas = document.getElementById('canvas');
 var canvEdge = document.getElementById('edges');
 var vid = document.getElementById('vid');
+var dropPercent = document.getElementById('dp');
+var level = document.getElementById('level');
 
 var ctx = canvas.getContext('2d');
 var edgeCtx = canvEdge.getContext('2d');
@@ -47,6 +49,8 @@ function capture()
 	getColour(pixels, redPixels, red);
 	var ratios = calculateRatios(pixels);
 	console.log(ratios);
+	dropPercent.innerHTML = ratios.normalised_drop_percent;
+	level.innerHTML = ratios.level;
     }
 }
 
