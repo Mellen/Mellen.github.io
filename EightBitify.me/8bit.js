@@ -1,24 +1,41 @@
 var canvas = document.getElementById('can');
 var ctx = canvas.getContext('2d');
+var localMediaStream = null;
 
-var img = new Image();
-var img2 = new Image();
+vid.addEventListener('click', capture, false);
 
-img.onload = function()
+navigator.getUserMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+
+if(navigator.getUserMedia)
 {
-    canvas.width = this.width;
-    canvas.height = this.height;
-    ctx.drawImage(img,0,0);
-    img2.src = canvas.toDataURL('image/png');
+    var um = navigator.getUserMedia({video: true}, handleVid, vidErr);
 }
 
-img2.onload = function()
+function handleVid(stream)
 {
-    ctx.drawImage(img2, 0, 0);
-    make8bit();
+    vid.src = window.URL.createObjectURL(stream);
+    localMediaStream = stream;
 }
 
-img.src = 'https://www.gravatar.com/avatar/ea5fb0bda281e5ddab057950eb17882a?s=512';
+function vidErr(e)
+{
+    alert(e);
+}
+
+function capture()
+{
+    if(localMediaStream)
+    {
+	canvas.width = vid.clientWidth;
+	canvas.height = vid.clientHeight;
+	ctx.drawImage(vid, 0, 0);
+	make8bit();
+    }
+}
+
 
 function make8bit()
 {
@@ -32,14 +49,14 @@ function make8bit()
 	var rng = 32;
 	var b = 64;
 	
-	var newRed = (red % 8) * rng;
-	var newGreen = (green % 8) * rng;
-	var newBlue = (blue % 8) * b;
+	var newRed = Math.floor(red / rng) * rng;
+	var newGreen = Math.floor(green / rng) * rng;
+	var newBlue = Math.floor(blue / b) * b;
 
 	image.data[dp] = newRed;
 	image.data[dp+1] = newGreen;
 	image.data[dp+2] = newBlue;
     }
 
-    ctx.putImageData(0, 0, image);
+    ctx.putImageData(image, 0, 0);
 }
