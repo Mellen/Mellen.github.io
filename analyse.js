@@ -51,9 +51,12 @@ function capture()
 	var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
 	setEdges(edges, pixels);
 	edgeIndices = getEdgeIndices(edges);
-
 	var bounds = calculateBounds(edgeIndices, canvas.width, canvas.height);
-
+	ctx.strokeStyle = '#ff0000';
+	for(var bi = 0; bi < bounds.length; bi++)
+	{
+	    ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
+	}
 	ctxEdge.putImageData(edges, 0, 0);
 
 	var ratios = calculateRatios(pixels);
@@ -210,13 +213,15 @@ function setEdges(edges, colourField)
 function getEdgeIndices(edges)
 {
     var indices = [];
-    for(var i = 0; i < edges.data.length; i++)
+    for(var i = 0; i < edges.data.length; i+=4)
     {
 	if(edges.data[i] == 255)
 	{
 	    indices.push(i);
 	}
     }
+
+    return indices;
 }
 
 function calculateBounds(indices, width, height)
@@ -229,27 +234,82 @@ function calculateBounds(indices, width, height)
 
     for(var i = 0; i < indices.length-1; i++)
     {
-	if(Math.floor(indices[i] / width) == Math.floor(indices[i+1] / width))
+	var index = indices[i]/4;
+	var nextIndex = index;
+ 
+	for(var oi = i+1; oi < indices.length; oi++)
 	{
-	    var y = Math.floor(indices[i] / width);
-	    widths.push({dist:Math.abs(indices[i] - indices[i+1]), 
-			 x1: indices[i]%width, 
-			 x2: indices[i+1]%width, 
+	    var pin = indices[oi] / 4;
+	    if(Math.floor(pin / width) == Math.floor(index / width))
+	    {
+		nextIndex = pin;
+	    }
+	}
+
+	if(nextIndex != index)
+	{
+	    var y = Math.floor(index / width);
+	    widths.push({dist:Math.abs(index - nextIndex), 
+			 x1: index%width, 
+			 x2: nextIndex%width, 
 			 y1: y, 
 			 y2: y});
 	}
     }
 
-    for(var i = 0; i < indices.length - width; i++)
+    for(var i = 0; i < indices.length - 1; i++)
     {
-	if((indices[i] % width) == (indices[i + width] % width))
+	var index = indices[i]/4;
+	var nextIndex = index;
+
+	for(var oi = i+1; oi < i + width && oi < indices.length; oi++)
 	{
-	    var x = indices[i] % width;
-	    heights.push({dist:Math.abs(indices[i] - indices[i+width]), 
+	    var pin = indices[oi]/4;
+	    if((pin % width) == (index % width))
+	    {
+		nextIndex = pin;
+		break
+	    }
+	}
+
+	if(nextIndex != index)
+	{
+	    var x = index % width;
+	    var y1 = Math.floor(index/width);
+	    var y2 = Math.floor(nextIndex / width);
+	    heights.push({dist:Math.abs(y1 - y2), 
 		          x1: x,
 			  x2: x, 
-			  y1: Math.floor(indices[i]/width), 
-			  y2: Math.floor(indices[i+width] / width)}));
+			  y1: y1,
+			  y2: y2});
 	}
     }
+
+    var boxMatch = [];
+
+    for(var wi = 0; wi < widths.length; wi++)
+    {
+	for(var hi = 0; hi < heights.length; hi++)
+	{
+	    if((heights[hi].x1 >= widths[wi].x1) 
+	       && (heights[hi].x1 <= widths[wi].x2)
+	       && (widths[wi].y1 >= heights[hi].y1)
+	       && (widths[wi].y1 <= heights[hi].y2))
+	    {
+		var ratio = heights[hi].dist / widths[wi].dist;
+
+		/*if(Math.abs(ratio - heightRatio) < epsilon)
+		{*/
+		    boxMatch.push({x1: widths[wi].x1,
+				   x2: widths[wi].x2,
+				   y1: heights[hi].y1,
+				   y2: heights[hi].y2});
+		//}
+	    }
+	}
+    }
+
+    console.log(boxMatch);
+
+    return boxMatch;
 }
