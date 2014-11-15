@@ -1,12 +1,24 @@
 var canvas = document.getElementById('can');
 var ctx = canvas.getContext('2d');
 
-var img = document.getElementById('img');
+var img = new Image();
+var img2 = new Image();
 
-canvas.width = img.width;
-canvas.height = img.height;
-ctx.drawImage(img,0,0);
-make8bit();
+img.onload = function()
+{
+    canvas.width = this.width;
+    canvas.height = this.height;
+    ctx.drawImage(img,0,0);
+    img2.src = canvas.toDataURL('image/png');
+}
+
+img2.onload = function()
+{
+    ctx.drawImage(img2, 0, 0);
+    make8bit();
+}
+
+img.src = 'https://www.gravatar.com/avatar/ea5fb0bda281e5ddab057950eb17882a?s=512';
 
 function make8bit()
 {
@@ -31,4 +43,3 @@ function make8bit()
 
     ctx.putImageData(0, 0, image);
 }
-
