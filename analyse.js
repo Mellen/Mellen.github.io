@@ -91,7 +91,7 @@ function calculateRatios(colourField)
 	normAvgs.push(avgs[i]/maxAvg);
     }
 
-    var threshold = 0.01;
+    var threshold = 0.5;
 
     edgeIndices = []
     for(var i = 0; i < normAvgs.length - 1; i++)
@@ -102,15 +102,17 @@ function calculateRatios(colourField)
 	}
     }
 
+    console.log(edgeIndices)
+
     if(edgeIndices.length < 4)
     {
 	console.log('not enough edge');
 	return {};
     }
 
-    var control = getDrop(edgeIndices[0] + 5, edgeIndices[1] - 5)
+    var control = getDrop(edgeIndices[0] + 5, edgeIndices[1] - 5, normAvgs)
     
-    var patient = getDrop(Math.floor(edgeIndices[2] + 0.50 * (edgeIndices[3] - edgeIndices[2])), Math.floor(edgeIndices[2] + 0.80 * (edgeIndices[3] - edgeIndices[2])));
+    var patient = getDrop(Math.floor(edgeIndices[2] + 0.50 * (edgeIndices[3] - edgeIndices[2])), Math.floor(edgeIndices[2] + 0.80 * (edgeIndices[3] - edgeIndices[2])), normAvgs);
    
     var ratio = patient / control * 100
 
@@ -122,13 +124,11 @@ function getDrop(x, y, normAvgs)
 {
     var width = y - x;
 
-    console.log(normAvgs);
-
     var minInControlStrip = Math.min.apply(null, normAvgs.splice(x, width));
 
     var minControlPosn = normAvgs.indexOf(minInControlStrip) + x;
 
-    var controlStripHeight = normAvgs[y] - norAvgs[x];
+    var controlStripHeight = normAvgs[y] - normAvgs[x];
 
     var proportionIntoControlStrip = (minControlPosn - x) / width;
 
