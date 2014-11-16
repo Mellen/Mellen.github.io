@@ -71,19 +71,42 @@ function process()
     canvas.height = this.clientHeight;
     canEdge.width = this.clientWidth;
     canEdge.height = this.clientHeight;
+
     ctx.drawImage(this, 0, 0);
+    ctx.strokeStyle = '#ff0000';
+
     var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
     var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
+
     setEdges(edges, pixels);
-    console.log('beep');
     edgeBins = getEdgeBins(edges);
-    console.log('boop');
+
     var bounds = calculateBounds(edgeBins, canvas.width, canvas.height);
-    ctx.strokeStyle = '#ff0000';
+
+    var c = 0;
+
     for(var bi = 0; bi < bounds.length; bi++)
     {
-	ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
+	for(var li = 0; li < bounds[bi].length; li++)
+	{
+ 	    ctx.beginPath()
+     	    ctx.moveTo(bounds[bi][li].start.x, bounds[bi][li].start.y);
+	    if(bounds[bi][li].finish)
+	    {
+		ctx.lineTo(bounds[bi][li].finish.x, bounds[bi][li].finish.y);
+	    }
+	    else
+	    {
+		console.log('no finish');
+		ctx.lineTo(canvas.width, bounds[bi][li].start.y);
+	    }
+	    ctx.stroke();
+	    c++;
+	}
     }
+
+    console.log(c);
+
     ctxEdge.putImageData(edges, 0, 0);
 
     var ratios = calculateRatios(pixels);
@@ -247,7 +270,7 @@ function getEdgeBins(edges)
     {
 	var bin = [];
 
-	if(edges.data[pi] == 255 || edges.data[pi + width] == 255 || edges.data[pi + (width*2) || edges.data[pi + (width*3)] == 225)
+	if(edges.data[pi] == 255 || edges.data[pi + width] == 255 || edges.data[pi + (width*2)] || edges.data[pi + (width*3)] == 225)
 	{	    
 	    if(edges.data[pi] == 255)
 	    {
@@ -263,7 +286,7 @@ function getEdgeBins(edges)
 	    }
 	    if(edges.data[pi + (width*2)] == 255)
 	    {
-		var x = (pi+ (width*2)) % width)/4;
+		var x = ((pi+ (width*2)) % width)/4;
 		var y = Math.floor((pi + (width*2))/width)/4;
 		bin.push({x:x, y:y});
 	    }
@@ -288,39 +311,88 @@ function getEdgeBins(edges)
 
 function calculateBounds(edgeBins, width, height)
 {
+    var minLineLength = 20;
     var epsilon = 0.01;
 
     var boxMatch = [];
 
-    var hls = [];
+    var horizontalLines = [];
 
-    for(var ebi = 0; ebi < edgeBins.length; ebi++)
+    for(var edgeBinIndex = 0; edgeBinIndex < edgedgeBinIndexns.length; edgeBinIndex++)
     {
-	var hli = Math.floor(ebi/width);
+	var rowIndex = Math.floor(edgeBinIndex/width);
 
-	if(ebi % width == 0)
+	if(edgeBinIndex % width == 0)
 	{
-	    hls.push([]);
+	    horizontalLines.push([]);
 	}
 
-	if(edgeBins[ebi].length != 0)
+	if(edgedgeBinIndexns[edgeBinIndex].length != 0)
 	{
-	    if(!hls[hli][hls[hli].length - 1].start || hls[hli][hls[hli].length - 1].finish)
+	    if(!horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1] || horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1].finish)
 	    {
-		hls[hli].push({start:{x:ebi%width, y:hli}});
+		horizontalLines[rowIndex].push({start:{x:edgeBinIndex%width, y:rowIndex}});
 	    }
 	}
 	else
 	{
-	    if(hls[hli].length > 0 && !hls[hli][hls[hli].length - 1].finish && hls[hli][hls[hli].length - 1].start)
+	    if(horizontalLines[rowIndex].length > 0 && !horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1].finish && horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1].start)
 	    {
-		hls[hli][hls[hli].length - 1].finish = {x:ebi%width, y:hli};
-		
+		horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1].finish = {x:edgeBinIndex%width, y:rowIndex};
 	    }
 	}
     }
 
-    var vls = [];
+    for(var rowIndex = 0; rowIndex < horizontalLines.length; rowIndex++)
+    {
+	for(var lineIndex = horizontalLines[rowIndex].length - 1; lineIndex >= 0; lineIndex--)
+	{
+	    if((!horizontalLines[rowIndex][lineIndex].finish) || (horizontalLines[rowIndex][lineIndex].finish.x - horizontalLines[rowIndex][lineIndex].start.x < minLineLength))
+	    {
+		horizontalLines[rowIndex].splice(lineIndex, 1);
+	    }
+	}
+    }
 
-    return boxMatch;
+    var vericalLines = [];
+
+    for(var rowIndex = 0; rowIndex < width; rowIndex++)
+    {
+	vericalLines.push([]);
+	
+	for(var edgeBinIndex = rowIndex; edgeBinIndex < edgedgeBinIndexns.length - width; edgeBinIndex += width)
+	{
+	    if(edgedgeBinIndexns[edgeBinIndex].length > 0)
+	    {
+		if(!vericalLines[rowIndex][vericalLines[rowIndex].length - 1] || vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish)
+		{
+		    vericalLines[rowIndex].push({start:{x:rowIndex, y:Math.floor(edgeBinIndex/width)}});
+		}
+	    }
+	    else
+	    {
+		if(vericalLines[rowIndex].length > 0 && !vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish && vericalLines[rowIndex][vericalLines[rowIndex].length - 1].start)
+		{
+		    vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish = {x:rowIndex, y:Math.floor(edgeBinIndex/width)};
+		}
+	    }
+	}
+    }    
+
+    for(var rowIndex = 0; rowIndex < vericalLines.length; rowIndex++)
+    {
+	for(var lineIndex = vericalLines[rowIndex].length - 1; lineIndex >= 0; lineIndex--)
+	{
+	    if((!vericalLines[rowIndex][lineIndex].finish) || (vericalLines[rowIndex][lineIndex].finish.y - vericalLines[rowIndex][lineIndex].start.y < minLineLength))
+	    {
+		vericalLines[rowIndex].splice(lineIndex, 1);
+	    }
+	}
+    }
+
+    var squares = [];
+
+    
+
+    return squares;
 }
