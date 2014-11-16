@@ -4,20 +4,19 @@ var ctx = canvas.getContext('2d');
 var canEdge = document.getElementById('edges');
 var ctxEdge = canEdge.getContext('2d');
 
-var vid = document.getElementById('vid');
+//var vid = document.getElementById('vid');
+var img = document.getElementById('strip');
 var dropPercent = document.getElementById('dp');
 var level = document.getElementById('level');
 var localMediaStream = null;
 
 //arbitrary values from one particular image used to produce ratios
-var fullWidth = 345;
-var patchWidthRatio = 143 / fullWidth;
-var midBarrierWidthRatio = 66 / fullWidth;
-var heightRatio = 86 / fullWidth;
+var patchHeightToWidthRatio = 71/55;
 
-vid.addEventListener('click', capture, false);
+//vid.addEventListener('click', capture, false);
+img.addEventListener('click', process, false);
 
-navigator.getUserMedia = ( navigator.getUserMedia ||
+/*navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
                        navigator.mozGetUserMedia ||
                        navigator.msGetUserMedia);
@@ -50,7 +49,7 @@ function capture()
 	var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
 	var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
 	setEdges(edges, pixels);
-	edgeIndices = getEdgeIndices(edges);
+	edgeIndices = getEdgeMap(edges);
 	var bounds = calculateBounds(edgeIndices, canvas.width, canvas.height);
 	ctx.strokeStyle = '#ff0000';
 	for(var bi = 0; bi < bounds.length; bi++)
@@ -60,11 +59,38 @@ function capture()
 	ctxEdge.putImageData(edges, 0, 0);
 
 	var ratios = calculateRatios(pixels);
-	console.log(ratios);
 	dropPercent.innerHTML = ratios.normalised_drop_percent;
 	level.innerHTML = ratios.level;
     }
+}*/
+
+function process()
+{
+
+    canvas.width = this.clientWidth;
+    canvas.height = this.clientHeight;
+    canEdge.width = this.clientWidth;
+    canEdge.height = this.clientHeight;
+    ctx.drawImage(this, 0, 0);
+    var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
+    var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
+    setEdges(edges, pixels);
+    console.log('beep');
+    edgeBins = getEdgeBins(edges);
+    console.log('boop');
+    var bounds = calculateBounds(edgeBins, canvas.width, canvas.height);
+    ctx.strokeStyle = '#ff0000';
+    for(var bi = 0; bi < bounds.length; bi++)
+    {
+	ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
+    }
+    ctxEdge.putImageData(edges, 0, 0);
+
+    var ratios = calculateRatios(pixels);
+    dropPercent.innerHTML = ratios.normalised_drop_percent;
+    level.innerHTML = ratios.level;
 }
+
 
 function calculateRatios(colourField)
 {
@@ -108,8 +134,6 @@ function calculateRatios(colourField)
 	    edgeIndices.push(i);
 	}
     }
-
-    console.log(edgeIndices)
 
     if(edgeIndices.length < 4)
     {
@@ -167,7 +191,7 @@ function setEdges(edges, colourField)
 
     stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
 
-    var limit = 0.3;
+    var limit = 0.25;
 
     for(var pi = 0; pi < edges.data.length; pi+=4)
     {
@@ -180,9 +204,9 @@ function setEdges(edges, colourField)
 	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
 	    if(scale > limit)
 	    {
-		edges.data[pi] = Math.floor(255 );
-		edges.data[pi+1] = Math.floor(255 );
-		edges.data[pi+2] = Math.floor(255 );
+		edges.data[pi] = 255;
+		edges.data[pi+1] = 255;
+		edges.data[pi+2] = 255;
 	    }
 	}
 	edges.data[pi+3] = 255;
@@ -201,115 +225,102 @@ function setEdges(edges, colourField)
 	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
 	    if(scale > limit)
 	    {
-		edges.data[pi] += Math.floor(255 );
-		edges.data[pi+1] += Math.floor(255 );
-		edges.data[pi+2] += Math.floor(255 );
+		edges.data[pi] = 255;
+		edges.data[pi+1] = 255;
+		edges.data[pi+2] = 255;
 	    }
 	}
 	edges.data[pi+3] = 255;
     }	
 }
 
-function getEdgeIndices(edges)
+function getEdgeBins(edges)
 {
-    var indices = [];
-    for(var i = 0; i < edges.data.length; i+=4)
+// floor(index / width) = y
+// index % width = x
+
+    var bins = [];
+
+    var width = edges.width * 4;
+
+    for(var pi = 0; pi < edges.data.length - (width * 3); pi += 4)
     {
-	if(edges.data[i] == 255)
+	var bin = [];
+
+	if(edges.data[pi] == 255 || edges.data[pi + width] == 255 || edges.data[pi + (width*2) || edges.data[pi + (width*3)] == 225)
+	{	    
+	    if(edges.data[pi] == 255)
+	    {
+		var x = ((pi/4) % width)/4;
+		var y = Math.floor((pi/4)/width)/4;
+		bin.push({x:x, y:y});
+	    }
+	    if(edges.data[pi + width] == 255)
+	    {
+		var x = ((pi+ width) % width)/4;
+		var y = Math.floor((pi + width)/width)/4;
+		bin.push({x:x, y:y});
+	    }
+	    if(edges.data[pi + (width*2)] == 255)
+	    {
+		var x = (pi+ (width*2)) % width)/4;
+		var y = Math.floor((pi + (width*2))/width)/4;
+		bin.push({x:x, y:y});
+	    }
+	    if(edges.data[pi + (width*3)] == 255)
+	    {
+		var x = ((pi+ (width*3)) % width)/4;
+		var y = Math.floor((pi + (width*3))/width)/4;
+		bin.push({x:x, y:y});
+	    }
+	}
+
+	bins.push(bin);
+
+	if(pi % width == (width - 1))
 	{
-	    indices.push(i);
+	    pi += (width * 3);
 	}
     }
 
-    return indices;
+    return bins;
 }
 
-function calculateBounds(indices, width, height)
+function calculateBounds(edgeBins, width, height)
 {
     var epsilon = 0.01;
 
-    var widths = [];
-
-    var heights = [];
-
-    for(var i = 0; i < indices.length-1; i++)
-    {
-	var index = indices[i]/4;
-	var nextIndex = index;
- 
-	for(var oi = i+1; oi < indices.length; oi++)
-	{
-	    var pin = indices[oi] / 4;
-	    if(Math.floor(pin / width) == Math.floor(index / width))
-	    {
-		nextIndex = pin;
-	    }
-	}
-
-	if(nextIndex != index)
-	{
-	    var y = Math.floor(index / width);
-	    widths.push({dist:Math.abs(index - nextIndex), 
-			 x1: index%width, 
-			 x2: nextIndex%width, 
-			 y1: y, 
-			 y2: y});
-	}
-    }
-
-    for(var i = 0; i < indices.length - 1; i++)
-    {
-	var index = indices[i]/4;
-	var nextIndex = index;
-
-	for(var oi = i+1; oi < i + width && oi < indices.length; oi++)
-	{
-	    var pin = indices[oi]/4;
-	    if((pin % width) == (index % width))
-	    {
-		nextIndex = pin;
-		break
-	    }
-	}
-
-	if(nextIndex != index)
-	{
-	    var x = index % width;
-	    var y1 = Math.floor(index/width);
-	    var y2 = Math.floor(nextIndex / width);
-	    heights.push({dist:Math.abs(y1 - y2), 
-		          x1: x,
-			  x2: x, 
-			  y1: y1,
-			  y2: y2});
-	}
-    }
-
     var boxMatch = [];
 
-    for(var wi = 0; wi < widths.length; wi++)
-    {
-	for(var hi = 0; hi < heights.length; hi++)
-	{
-	    if((heights[hi].x1 >= widths[wi].x1) 
-	       && (heights[hi].x1 <= widths[wi].x2)
-	       && (widths[wi].y1 >= heights[hi].y1)
-	       && (widths[wi].y1 <= heights[hi].y2))
-	    {
-		var ratio = heights[hi].dist / widths[wi].dist;
+    var hls = [];
 
-		/*if(Math.abs(ratio - heightRatio) < epsilon)
-		{*/
-		    boxMatch.push({x1: widths[wi].x1,
-				   x2: widths[wi].x2,
-				   y1: heights[hi].y1,
-				   y2: heights[hi].y2});
-		//}
+    for(var ebi = 0; ebi < edgeBins.length; ebi++)
+    {
+	var hli = Math.floor(ebi/width);
+
+	if(ebi % width == 0)
+	{
+	    hls.push([]);
+	}
+
+	if(edgeBins[ebi].length != 0)
+	{
+	    if(!hls[hli][hls[hli].length - 1].start || hls[hli][hls[hli].length - 1].finish)
+	    {
+		hls[hli].push({start:{x:ebi%width, y:hli}});
+	    }
+	}
+	else
+	{
+	    if(hls[hli].length > 0 && !hls[hli][hls[hli].length - 1].finish && hls[hli][hls[hli].length - 1].start)
+	    {
+		hls[hli][hls[hli].length - 1].finish = {x:ebi%width, y:hli};
+		
 	    }
 	}
     }
 
-    console.log(boxMatch);
+    var vls = [];
 
     return boxMatch;
 }
