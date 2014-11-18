@@ -329,6 +329,26 @@ function calculateBounds(edgeBins, width, height)
 	}
     }
 
+    var removals = [];
+
+    for(var rowIndex = horizontalLines.length - 1; rowIndex > 1 ;rowIndex--)
+    {
+	var row = horizontalLines[rowIndex];
+	for(var lineIndex =  row.length - 1; lineIndex > 1;  lineIndex--)
+	{
+	    removals.push(mergeLines(rowIndex, lineIndex, horizontalLines, true));
+	}
+    }
+
+    for(var remindex = removals.length - 1; remindex >= 0; remindex--)
+    {
+	var remline = removals[remindex];
+	for(var lineIndex = remline.length - 1; lineIndex >= 0; lineIndex--)
+	{
+	    horizontalLines[remline[lineIndex].row].splice(remline[lineIndex].line, 1);
+	}
+    }
+
     for(var rowIndex = 0; rowIndex < horizontalLines.length; rowIndex++)
     {
 	for(var lineIndex = horizontalLines[rowIndex].length - 1; lineIndex >= 0; lineIndex--)
@@ -378,7 +398,7 @@ function calculateBounds(edgeBins, width, height)
 
     var squares = [];
 
-    for(var horizRowIndex = 0; horizRowIndex < horizontalLines.length; horizRowIndex++)
+    /*for(var horizRowIndex = 0; horizRowIndex < horizontalLines.length; horizRowIndex++)
     {
 	var hrow = horizontalLines[horizRowIndex];
 	for(var horizLineIndex = 0; horizLineIndex < hrow.length; horizLineIndex++)
@@ -469,7 +489,131 @@ function calculateBounds(edgeBins, width, height)
 		squares.push(sqr);
 	    }
 	}
+	}*/
+
+    return horizontalLines;
+}
+
+function mergeLines(rowIndex, lineIndex, lineArray, areHorizontalLines)
+{
+    var line = lineArray[rowIndex][lineIndex];
+       
+    var remove = [];
+
+    if(!line.finish)
+    {
+	remove.push({row: rowIndex, line: lineIndex});
+	remove.lowestRowIndex = rowIndex;
+	return remove;
     }
 
-    return squares;
+    var nextLineInRow = lineArray[rowIndex][lineIndex-1];
+
+    var nextRowIndex = rowIndex;
+
+    if(nextLineInRow && nextLineInRow.finish)
+    {
+	if(areHorizontalLines)
+	{
+	    if(Math.abs(nextLineInRow.start.x - line.finish.x) <= 4)
+	    {
+		remove = mergeLines(rowIndex, lineIndex-1, lineArray, areHorizontalLines);
+		line.start.x = nextLineInRow.start.x;
+		line.start.y = nextLineInRow.start.y;
+		remove.push({row: rowIndex, line:lineIndex-1});
+		if(!remove.lowestRowIndex)
+	        {
+		    remove.lowestRowIndex = rowIndex;
+		}
+		else
+	        {
+		    if(remove.lowestRowIndex < rowIndex)
+		    {
+			remove.lowestRowIndex = rowIndex;
+		    }
+		}
+	    }
+	}
+	else
+	{
+	    if(Math.abs(nextLineInRow.start.y - line.finish.y) <= 4)
+	    {
+		remove = mergeLines(rowIndex, lineIndex-1, lineArray, areHorizontalLines);
+		line.start.x = nextLineInRow.start.x;
+		line.start.y = nextLineInRow.start.y;
+		remove.push({row: rowIndex, line:lineIndex-1});
+		if(!remove.lowestRowIndex)
+		{
+		    remove.lowestRowIndex = rowIndex;
+		}
+		else
+		{
+		    if(remove.lowestRowIndex > rowIndex)
+		    {
+			remove.lowestRowIndex = rowIndex;
+		    }
+		}	
+	    }
+	}
+    }
+
+    var lowestRowIndex = remove.lowestRowIndex - 1;
+
+    if(lineArray[lowestRowIndex] && lineArray[lowestRowIndex].length > 0)
+    {
+	var nextLineInRowAbove = lineArray[lowestRowIndex][0];
+
+	var found = false;
+	var lineIndex = 0;
+
+	if(areHorizontalLines)
+	{
+	    while(!found && nextLineInRowAbove)
+	    {
+		if(nextLineInRowAbove.finish
+		   && (nextLineInRowAbove.finish.y < line.finish.y) 
+		   && (nextLineInRowAbove.finish.y > line.start.y)
+		   && (nextLineInRowAbove.start.x < line.start.x))
+		{
+		    found = true;
+		}
+		else
+	        {
+		    lineIndex++;
+		    nextLineInRowAbove = lineArray[lowestRowIndex][lineIndex];
+		}
+	    }
+	}
+	else
+        {
+	    while(!found && nextLineInRowAbove)
+	    {
+		if(nextLineInRowAbove.finish
+		   && (nextLineInRowAbove.finish.x < line.finish.x) 
+		   && (nextLineInRowAbove.finish.x > line.start.x)
+		   && (nextLineInRowAbove.start.y < line.start.y))
+		{
+		    found = true;
+		}
+		else
+	        {
+		    lineIndex++;
+		    nextLineInRowAbove = lineArray[lowestRowIndex][lineIndex];
+		}
+	    }	    
+        }
+    
+	if(found)
+	{
+	    remove = mergeLines(lowestRowIndex, lineIndex, lineArray, areHorizontalLines);
+	    line.start.x = nextLineInRowAbove.start.x;
+	    line.start.y = nextLineInRowAbove.start.y;
+	    if(remove.lowestRowIndex > lowestRowIndex)
+	    {
+		remove.lowestRowIndex = lowestRowIndex;
+            }
+	}
+    }
+
+    return remove;
 }
