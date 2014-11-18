@@ -66,7 +66,6 @@ function capture()
 
 function process()
 {
-
     canvas.width = this.clientWidth;
     canvas.height = this.clientHeight;
     canEdge.width = this.clientWidth;
@@ -87,22 +86,8 @@ function process()
 
     for(var bi = 0; bi < bounds.length; bi++)
     {
-	for(var li = 0; li < bounds[bi].length; li++)
-	{
- 	    ctx.beginPath()
-     	    ctx.moveTo(bounds[bi][li].start.x, bounds[bi][li].start.y);
-	    if(bounds[bi][li].finish)
-	    {
-		ctx.lineTo(bounds[bi][li].finish.x, bounds[bi][li].finish.y);
-	    }
-	    else
-	    {
-		console.log('no finish');
-		ctx.lineTo(canvas.width, bounds[bi][li].start.y);
-	    }
-	    ctx.stroke();
-	    c++;
-	}
+	ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
+	c++;
     }
 
     console.log(c);
@@ -311,6 +296,7 @@ function getEdgeBins(edges)
 
 function calculateBounds(edgeBins, width, height)
 {
+    var maxVertHorizDist = 10;
     var minLineLength = 20;
     var epsilon = 0.01;
 
@@ -318,7 +304,7 @@ function calculateBounds(edgeBins, width, height)
 
     var horizontalLines = [];
 
-    for(var edgeBinIndex = 0; edgeBinIndex < edgedgeBinIndexns.length; edgeBinIndex++)
+    for(var edgeBinIndex = 0; edgeBinIndex < edgeBins.length; edgeBinIndex++)
     {
 	var rowIndex = Math.floor(edgeBinIndex/width);
 
@@ -327,7 +313,7 @@ function calculateBounds(edgeBins, width, height)
 	    horizontalLines.push([]);
 	}
 
-	if(edgedgeBinIndexns[edgeBinIndex].length != 0)
+	if(edgeBins[edgeBinIndex].length != 0)
 	{
 	    if(!horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1] || horizontalLines[rowIndex][horizontalLines[rowIndex].length - 1].finish)
 	    {
@@ -354,45 +340,136 @@ function calculateBounds(edgeBins, width, height)
 	}
     }
 
-    var vericalLines = [];
+    var verticalLines = [];
 
     for(var rowIndex = 0; rowIndex < width; rowIndex++)
     {
-	vericalLines.push([]);
+	verticalLines.push([]);
 	
-	for(var edgeBinIndex = rowIndex; edgeBinIndex < edgedgeBinIndexns.length - width; edgeBinIndex += width)
+	for(var edgeBinIndex = rowIndex; edgeBinIndex < edgeBins.length - width; edgeBinIndex += width)
 	{
-	    if(edgedgeBinIndexns[edgeBinIndex].length > 0)
+	    if(edgeBins[edgeBinIndex].length > 0)
 	    {
-		if(!vericalLines[rowIndex][vericalLines[rowIndex].length - 1] || vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish)
+		if(!verticalLines[rowIndex][verticalLines[rowIndex].length - 1] || verticalLines[rowIndex][verticalLines[rowIndex].length - 1].finish)
 		{
-		    vericalLines[rowIndex].push({start:{x:rowIndex, y:Math.floor(edgeBinIndex/width)}});
+		    verticalLines[rowIndex].push({start:{x:rowIndex, y:Math.floor(edgeBinIndex/width)}});
 		}
 	    }
 	    else
 	    {
-		if(vericalLines[rowIndex].length > 0 && !vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish && vericalLines[rowIndex][vericalLines[rowIndex].length - 1].start)
+		if(verticalLines[rowIndex].length > 0 && !verticalLines[rowIndex][verticalLines[rowIndex].length - 1].finish && verticalLines[rowIndex][verticalLines[rowIndex].length - 1].start)
 		{
-		    vericalLines[rowIndex][vericalLines[rowIndex].length - 1].finish = {x:rowIndex, y:Math.floor(edgeBinIndex/width)};
+		    verticalLines[rowIndex][verticalLines[rowIndex].length - 1].finish = {x:rowIndex, y:Math.floor(edgeBinIndex/width)};
 		}
 	    }
 	}
     }    
 
-    for(var rowIndex = 0; rowIndex < vericalLines.length; rowIndex++)
+    for(var rowIndex = 0; rowIndex < verticalLines.length; rowIndex++)
     {
-	for(var lineIndex = vericalLines[rowIndex].length - 1; lineIndex >= 0; lineIndex--)
+	for(var lineIndex = verticalLines[rowIndex].length - 1; lineIndex >= 0; lineIndex--)
 	{
-	    if((!vericalLines[rowIndex][lineIndex].finish) || (vericalLines[rowIndex][lineIndex].finish.y - vericalLines[rowIndex][lineIndex].start.y < minLineLength))
+	    if((!verticalLines[rowIndex][lineIndex].finish) || (verticalLines[rowIndex][lineIndex].finish.y - verticalLines[rowIndex][lineIndex].start.y < minLineLength))
 	    {
-		vericalLines[rowIndex].splice(lineIndex, 1);
+		verticalLines[rowIndex].splice(lineIndex, 1);
 	    }
 	}
     }
 
     var squares = [];
 
-    
+    for(var horizRowIndex = 0; horizRowIndex < horizontalLines.length; horizRowIndex++)
+    {
+	var hrow = horizontalLines[horizRowIndex];
+	for(var horizLineIndex = 0; horizLineIndex < hrow.length; horizLineIndex++)
+	{
+	    var hline1 = hrow[horizLineIndex];
+	    
+	    var foundIndicies = {row:0, line:0};
+	    
+	    for(var vertRowIndex = 0; vertRowIndex < verticalLines.length; vertRowIndex++)
+	    {
+		var vrow = verticalLines[vertRowIndex];
+		var found = false;
+		for(var vertLineIndex = 0; vertLineIndex < vrow.length; vertLineIndex++)
+		{
+		    var vline1 = vrow[vertLineIndex];
+
+		    console.log('v1: ' + vline1);
+
+		    if((Math.abs(vline1.start.y - hline1.start.y) < maxVertHorizDist) && (Math.abs(vline1.start.x - hline1.start.x) < maxVertHorizDist))
+		    {
+			found = true;
+			foundIndicies = {row: vertRowIndex, line: vertLineIndex};
+			break;
+		    }
+		}
+
+		if(found)
+		    break;
+	    }
+
+	    if(found)
+	    {
+		found = false;
+		for(var vertRowIndex = foundIndicies.row; vertRowIndex < verticalLines.length; vertRowIndex++)
+		{
+		    var vrow = verticalLines[vertRowIndex];
+		    var found = false;
+		    for(var vertLineIndex = foundIndicies.line; vertLineIndex < vrow.length; vertLineIndex++)
+		    {
+			var vline2 = vrow[vertLineIndex];
+
+			console.log('v2: ' + vline2)
+
+			var dist = vline2.x - vline1.x;
+
+			if((Math.abs(hline1.start.y - vline2.start.y) < maxVertHorizDist) && (Math.abs(vline2.start.x - hline1.finish.x) < maxVertHorizDist) && (dist >= minLineLength))
+			{
+			    found = true;		 
+			    break;
+			}
+		    }
+
+		    if(found)
+			break;
+		}
+	    }
+
+	    if(found)
+	    {
+		found = false;
+
+		for(var horizRowIndex2 = horizRowIndex; horizRowIndex2 < horizontalLines.length; horizRowIndex2++)
+		{
+		    var hrow2 = horizontalLines[horizRowIndex2];
+		    for(var horizLineIndex2 = horizLineIndex; horizLineIndex < hrow.length; horizLineIndex2++)
+		    {
+			var hline2 = hrow[horizLineIndex];
+			
+			console.log('h2: ' + hline2);
+
+			var dist = hline2.y - hline1.y;
+
+			if((dist >= minLineLength) && (Math.abs(hline2.start.y - vline2.finish.y) < maxVertHorizDist) && ((Math.abs(hline2.start.x - vline1.start.x) < maxVertHorizDist)))
+			{
+			    found = true;
+			    break;
+			}
+		    }
+		    
+		    if(found)
+			break;
+		}
+	    }
+
+	    if(found)
+	    {
+		var srq = {x1: vline1.start.x, y1:hline1.start.y, x2:vline2.start.x, y2:hline2.start.y};
+		squares.push(sqr);
+	    }
+	}
+    }
 
     return squares;
 }
