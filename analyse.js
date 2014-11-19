@@ -86,8 +86,15 @@ function process()
 
     for(var bi = 0; bi < bounds.length; bi++)
     {
-	ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
-	c++;
+	var row = bounds[bi];
+	for(var lineIndex = 0; lineIndex < row.length; lineIndex++)
+	{
+	    ctx.beginPath();
+	    ctx.moveTo(row[lineIndex].start.x, row[lineIndex].start.y);
+	    ctx.lineTo(row[lineIndex].finish.x, row[lineIndex].finish.y);
+	    ctx.stroke();
+	    c++;
+	}
     }
 
     console.log(c);
@@ -360,6 +367,8 @@ function calculateBounds(edgeBins, width, height)
 	}
     }
 
+    console.log(horizontalLines);
+
     var verticalLines = [];
 
     for(var rowIndex = 0; rowIndex < width; rowIndex++)
@@ -515,7 +524,7 @@ function mergeLines(rowIndex, lineIndex, lineArray, areHorizontalLines)
     {
 	if(areHorizontalLines)
 	{
-	    if(Math.abs(nextLineInRow.start.x - line.finish.x) <= 4)
+	    if((nextLineInRow.finish.x - line.start.x <= 4)&&(nextLineInRow.finish < line.finish.x))
 	    {
 		remove = mergeLines(rowIndex, lineIndex-1, lineArray, areHorizontalLines);
 		line.start.x = nextLineInRow.start.x;
