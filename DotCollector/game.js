@@ -12,16 +12,20 @@ Game.prototype.start = function (levelNumber)
     this.player.levelNumber = levelNumber;
     this.player.position.x = this.level.playerStart.x;
     this.player.position.y = this.level.playerStart.y;
-    this.player.alive = true;
+    this.player.isAlive = true;
 }
 
 function Player()
 {
     this.score = 0;
     this.levelNumber = 0;
-    this.position = {x: 0, y:0}
-    this.alive = true;
+    this.position = {x:0, y:0};
+    this.width = 1;
+    this.height = 1;
+    this.isAlive = true;
 }
+
+var directions = {left:0, right:1, up:2, down:3};
 
 var levels = [];
 

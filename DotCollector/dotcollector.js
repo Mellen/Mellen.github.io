@@ -6,6 +6,12 @@ var game = new Game();
 var width = canvas.width;
 var height = canvas.height;
 
+var gameToViewWidthRatio = width/game.width;
+var gameToViewHeightRatio = height/game.height;
+
+var playerWidth = game.player.width * gameToViewWidthRatio;
+var playerHeight = game.player.height * gameToViewHeightRatio;
+
 window.requestAnimFrame = (function(callback){
     return window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
@@ -18,15 +24,28 @@ window.requestAnimFrame = (function(callback){
 })();
 
 
-function DrawBoard()
+function drawBoard()
 {
     context.fillStyle = '#0000ff';
     context.fillRect(0, 0, width, height);
 
+    if(game.player.isAlive)
+    {
+	drawPlayer();
+    }
+
     requestAnimFrame(function(){
-        DrawBoard();
+        drawBoard();
     });
 
 }
 
-DrawBoard();
+function drawPlayer()
+{
+    context.fillStyle = '#ffff00';
+    var x = game.player.position.x * gameToViewWidthRatio;
+    var y = game.player.position.y * gameToViewHeightRatio;
+    context.fillRect(x, y, playerWidth, playerHeight);
+}
+
+drawBoard();
