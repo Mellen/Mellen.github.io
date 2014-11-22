@@ -6,6 +6,8 @@ function Game()
     this.height = 48;
     this.dotWidth = 0.5;
     this.dotHeight = 0.5;
+    this.wallWidth = 1;
+    this.wallHeight = 1;
 }
 
 Game.prototype.start = function (levelNumber)
@@ -22,8 +24,8 @@ function Player()
     this.score = 0;
     this.levelNumber = 0;
     this.position = {x:0, y:0};
-    this.width = 1;
-    this.height = 1;
+    this.width = 0.9;
+    this.height = 0.9;
     this.isAlive = true;
 }
 
@@ -35,7 +37,7 @@ levels.push(
 {
     speed: 1,
     dotPositions: [{x:2, y:3}],
-    badGuyCount: 0,
+    badGuyStarts: [],
     playerStart: {x: 32, y: 28},
-    wallPositions: []
+    wallPositions: [{x:4, y:5}]
 });

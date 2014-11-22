@@ -13,6 +13,8 @@ var playerWidth = game.player.width * gameToViewWidthRatio;
 var playerHeight = game.player.height * gameToViewHeightRatio;
 var dotWidth = game.dotWidth * gameToViewWidthRatio;
 var dotHeight = game.dotHeight * gameToViewHeightRatio;
+var wallWidth = game.wallWidth * gameToViewWidthRatio;
+var wallHeight = game.wallHeight * gameToViewHeightRatio;
 
 window.requestAnimFrame = (function(callback){
     return window.requestAnimationFrame ||
@@ -39,6 +41,7 @@ function drawBoard()
     if(game.level)
     {
 	drawDots();
+	drawWalls();
     }
 
     requestAnimFrame(function(){
@@ -56,6 +59,18 @@ function drawDots()
 	var x = (dot.x * gameToViewWidthRatio) - (dotWidth/2);
 	var y = (dot.y * gameToViewHeightRatio) - (dotHeight/2);
 	context.fillRect(x, y, dotWidth, dotHeight);
+    }
+}
+
+function drawWalls()
+{
+    context.fillStyle = '#9A9A9A';
+    for(var wallIndex = 0; wallIndex < game.level.wallPositions.length; wallIndex++)
+    {
+	var wall = game.level.wallPositions[wallIndex];
+	var x = (wall.x * gameToViewWidthRatio) - (wallWidth/2);
+	var y = (wall.y * gameToViewHeightRatio) - (wallHeight/2);
+	context.fillRect(x, y, wallWidth, wallHeight);
     }
 }
 
