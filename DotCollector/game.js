@@ -1,9 +1,11 @@
 function Game()
 {
-    this.level = {}
+    this.level = null;
     this.player = new Player();
     this.width = 64;
     this.height = 48;
+    this.dotWidth = 0.5;
+    this.dotHeight = 0.5;
 }
 
 Game.prototype.start = function (levelNumber)
@@ -31,6 +33,7 @@ var levels = [];
 
 levels.push( 
 {
+    speed: 1,
     dotPositions: [{x:2, y:3}],
     badGuyCount: 0,
     playerStart: {x: 32, y: 28},
