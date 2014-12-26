@@ -83,33 +83,29 @@ EdgePicker.prototype.calcEdgeBins = function()
 
     var width = this.edges.width * 4;
     var bin = [];
-    var horizontalPosition = 0;
-    var verticalPosition = 0;
 
-    for(var pixelIndex = 0; pixelIndex < this.edges.length; pixelIndex += 4)
+    for(var pixelIndex = 0; pixelIndex < this.edges.data.length; pixelIndex += 4)
     {
-	var x = (pixelIndex / 4) % (width / 4);
-	var y = (pixelIndex / 4) / (width / 4);
+	var x = Math.floor(pixelIndex / 4) % (width / 4);
+	var y = Math.floor((pixelIndex / 4) / (width / 4));
 
-	if(this.bins[x] === undefined)
+	var column = Math.floor(pixelIndex / 16) % (width / 16);
+	var row  = Math.floor((pixelIndex / 16) / (width / 16));
+
+	if(this.bins[row] === undefined)
 	{
 	    this.bins.push([]);
 	}
 
-	var value = this.edges.data[i];
+	if(this.bins[row][column] === undefined)
+	{
+	    this.bins[row].push([]);
+	}
 
-	if(this.bins[x][y] === undefined)
+	if(this.edges.data[pixelIndex] !== 0)
 	{
-	    this.bins[x].push(value);
-	}
-	else
-	{
-	    if(this.bins[x][y] === 0)
-	    {
-		this.bins[x][y] = value;
-	    }
-	}
-	
+	    this.bins[row][column].push({x:x, y:y});
+	}	
     }
 
 }
