@@ -9,6 +9,7 @@ BoxFinder.prototype.findBoxes = function()
 {
     this.boxes = [];
     this.findHorizontalLines();
+    this.findVerticalLines();
 }
 
 BoxFinder.prototype.findHorizontalLines = function()
@@ -22,7 +23,7 @@ BoxFinder.prototype.findHorizontalLines = function()
 	}
 
 	var row = this.edgeBins[rowIndex];
-	var result = this.findLineStart(row, 0);
+	var result = this.findHorizontalLineStart(row, 0);
 
 	var point = result.p;
 	var firstPointBinIndex = result.bi;
@@ -37,12 +38,15 @@ BoxFinder.prototype.findHorizontalLines = function()
 
 	for(var binIndex = firstPointBinIndex+1; binIndex < row.length; binIndex++)
 	{
-	    point = this.findNextLinePoint(row[binIndex]);
+	    point = this.findNextHorizontalLinePoint(row[binIndex]);
 	    if(point === -1)
 	    {
-		this.horizontalLines.push(line);
+		if(line.x2 - line.x1 > 4)
+		{
+		    this.horizontalLines.push(line);
+		}
 		line = null;
-		result = this.findLineStart(row, binIndex);
+		result = this.findHorizontalLineStart(row, binIndex);
 		if(result.p == -1)
 		{
 		    break;
@@ -61,14 +65,14 @@ BoxFinder.prototype.findHorizontalLines = function()
 	    }
 	}
 
-	if(line !== null)
+	if(line !== null &&  (line.x2 - line.x1 > 4))
 	{
 	    this.horizontalLines.push(line);
 	}
     }
 }
 
-BoxFinder.prototype.findLineStart = function(row, binIndexStart)
+BoxFinder.prototype.findHorizontalLineStart = function(row, binIndexStart)
 {
     var found = false;
 
@@ -105,7 +109,7 @@ BoxFinder.prototype.findLineStart = function(row, binIndexStart)
     return {p:point, bi:binIndex};
 }
 
-BoxFinder.prototype.findNextLinePoint = function(bin)
+BoxFinder.prototype.findNextHorizontalLinePoint = function(bin)
 {
     if(bin.length === 0)
     {
@@ -122,5 +126,115 @@ BoxFinder.prototype.findNextLinePoint = function(bin)
     }
 
     return point;
-    
+}
+
+BoxFinder.prototype.findVerticalLines = function()
+{
+    this.verticalLines = [];
+    for(var columnIndex = 0; columnIndex < this.edgeBins[0].length; columnIndex++)
+    {
+	var result = this.findVerticalLineStart(columnIndex, 0);
+	if(result.p === -1)
+	{
+	    continue;
+	}
+
+	var line = {x1: result.p.x, x2: result.p.x,
+		    y1: result.p.y, y2: result.p.y};
+ 
+	for(var rowIndex = result.ri+1; rowIndex < this.edgeBins.length; rowIndex++)
+	{
+	    point = this.findNextVerticalLinePoint(columnIndex, rowIndex);
+	    if(point === -1)
+	    {
+		if(line.y2 - line.y1 > 4)
+		{
+		    this.verticalLines.push(line);
+		}
+
+		result = this.findVerticalLineStart(columnIndex, rowIndex);
+		if(result.p === -1)
+		{
+		    line = null;
+		    break;
+		}
+		else
+		{
+		    rowIndex = result.ri;
+		    line = {x1: result.p.x, x2: result.p.x,
+			    y1: result.p.y, y2: result.p.y};
+		}
+	    }
+	    else
+	    {
+		line.x2 = point.x;
+		line.y2 = point.y;
+	    }
+	}	
+
+	if(line !== null && line.y2 - line.y1 > 4)
+	{
+	    this.verticalLines.push(line);
+	}
+    }
+}
+
+BoxFinder.prototype.findVerticalLineStart = function(columnIndex, startRowIndex)
+{
+    found = false;
+    for(var rowIndex = startRowIndex; rowIndex < this.edgeBins.length; rowIndex++)
+    {
+	if(this.edgeBins[rowIndex][columnIndex].length > 0)
+	{
+	    found = true;
+	    break;
+	}
+    }
+
+    if(!found)
+    {
+	return{p:-1, ri:-1};
+    }
+
+    var point = this.edgeBins[rowIndex][columnIndex][0];
+    var bin = this.edgeBins[rowIndex][columnIndex];
+
+    for(var pointIndex in bin)
+    {
+	if(bin[pointIndex].y < point.y)
+	{
+	    point = bin[pointIndex];
+	}
+	else if((bin[pointIndex].y == point.y) && (bin[pointIndex].x < point.x))
+	{
+	    point = bin[pointIndex];
+	}
+    }
+
+    return {p:point, ri:rowIndex};
+}
+
+BoxFinder.prototype.findNextVerticalLinePoint = function(columnIndex, rowIndex)
+{
+    if(this.edgeBins[rowIndex][columnIndex].length === 0)
+    {
+	return -1;
+    }
+
+    var point = this.edgeBins[rowIndex][columnIndex][0];
+    var bin = this.edgeBins[rowIndex][columnIndex];
+
+    for(var pointIndex in bin)
+    {
+	if(bin[pointIndex].y < point.y)
+	{
+	    point = bin[pointIndex];
+	}
+	else if((bin[pointIndex].y == point.y) && (bin[pointIndex].x < point.x))
+	{
+	    point = bin[pointIndex];
+	}
+    }
+
+    return point;
 }

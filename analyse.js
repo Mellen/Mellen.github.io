@@ -87,20 +87,9 @@ function process()
 
     var colours = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
 
-    for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
+    for(var bi = 0; bi < boxFinder.verticalLines.length; bi++)
     {
-/*	var row = boxFinder.boxes[bi];
-	for(var lineIndex = 0; lineIndex < row.length; lineIndex++)
-	{
-	    ctx.beginPath();
-	    ctx.moveTo(row[lineIndex].start.x, row[lineIndex].start.y);
-	    ctx.lineTo(row[lineIndex].finish.x, row[lineIndex].finish.y);
-	    ctx.strokeStyle = colours[c % colours.length];
-	    ctx.stroke();
-	    c++;
-	}*/
-
-	var line = boxFinder.horizontalLines[bi];
+	var line = boxFinder.verticalLines[bi];
 	ctx.beginPath();
 	ctx.moveTo(line.x1, line.y1);
 	ctx.lineTo(line.x2, line.y2);
@@ -109,6 +98,16 @@ function process()
 	c++;
     }
 
+    for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
+    {
+	var line = boxFinder.horizontalLines[bi];
+	ctx.beginPath();
+	ctx.moveTo(line.x1, line.y1);
+	ctx.lineTo(line.x2, line.y2);
+	ctx.strokeStyle = colours[c % colours.length];
+	ctx.stroke();
+	c++;
+    }
     console.log('c: ' + c);
 
     ctxEdge.putImageData(edges, 0, 0);
