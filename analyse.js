@@ -77,27 +77,39 @@ function process()
     var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
     var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
 
-    setEdges(edges, pixels);
-    edgeBins = getEdgeBins(edges);
+    var edgePicker = new EdgePicker(edges, pixels, 0.25);
+    edgePicker.calcEdgeBins();
 
-    var bounds = calculateBounds(edgeBins, canvas.width, canvas.height);
+    var boxFinder = new BoxFinder(edgePicker.bins, canvas.width, canvas.height); 
+    boxFinder.findBoxes();
 
     var c = 0;
 
-    for(var bi = 0; bi < bounds.length; bi++)
+    var colours = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
+
+    for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
     {
-	var row = bounds[bi];
+/*	var row = boxFinder.boxes[bi];
 	for(var lineIndex = 0; lineIndex < row.length; lineIndex++)
 	{
 	    ctx.beginPath();
 	    ctx.moveTo(row[lineIndex].start.x, row[lineIndex].start.y);
 	    ctx.lineTo(row[lineIndex].finish.x, row[lineIndex].finish.y);
+	    ctx.strokeStyle = colours[c % colours.length];
 	    ctx.stroke();
 	    c++;
-	}
+	}*/
+
+	var line = boxFinder.horizontalLines[bi];
+	ctx.beginPath();
+	ctx.moveTo(line.x1, line.y1);
+	ctx.lineTo(line.x2, line.y2);
+	ctx.strokeStyle = colours[c % colours.length];
+	ctx.stroke();
+	c++;
     }
 
-    console.log(c);
+    console.log('c: ' + c);
 
     ctxEdge.putImageData(edges, 0, 0);
 
@@ -186,120 +198,7 @@ function getDrop(x, y, normAvgs)
     return (calculatedValueAtMinPosn - minInControlStrip);
 }
 
-function setEdges(edges, colourField)
-{
-    var stdDev = 0;
-    var pixelCount = colourField.width * colourField.height;
-    var colourScore = 0;
-    for(var pi = 0; pi < colourField.data.length; pi += 4)
-    {
-	colourScore += colourField.data[pi];
-    }
-    var mean = colourScore / pixelCount;
-    var distsFromMeanSquared = [];
 
-    for(var pi = 0; pi < colourField.data.length; pi+=4)
-    {	
-	var redVal = colourField.data[pi];
-	distsFromMeanSquared.push((redVal - mean) * (redVal - mean));
-    }
-
-    stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
-
-    var limit = 0.25;
-
-    for(var pi = 0; pi < edges.data.length; pi+=4)
-    {
-	if(pi % (colourField.width*4) != (colourField.width * 4))
-	{
-	    var redVal1 = colourField.data[pi];
-
-	    var redVal2 = colourField.data[pi+4];
-
-	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
-	    if(scale > limit)
-	    {
-		edges.data[pi] = 255;
-		edges.data[pi+1] = 255;
-		edges.data[pi+2] = 255;
-	    }
-	}
-	edges.data[pi+3] = 255;
-    }
-
-    var width = edges.width * 4;
-
-    for(var pi = 0; pi < edges.data.length; pi+=4)
-    {
-	if(pi < (edges.data.length - (width)))
-	{
-	    var redVal1 = colourField.data[pi];
-
-	    var redVal2 = colourField.data[pi+width];
-
-	    var scale = Math.abs(redVal1 - redVal2) / stdDev;
-	    if(scale > limit)
-	    {
-		edges.data[pi] = 255;
-		edges.data[pi+1] = 255;
-		edges.data[pi+2] = 255;
-	    }
-	}
-	edges.data[pi+3] = 255;
-    }	
-}
-
-function getEdgeBins(edges)
-{
-// floor(index / width) = y
-// index % width = x
-
-    var bins = [];
-
-    var width = edges.width * 4;
-
-    for(var pi = 0; pi < edges.data.length - (width * 3); pi += 4)
-    {
-	var bin = [];
-
-	if(edges.data[pi] == 255 || edges.data[pi + width] == 255 || edges.data[pi + (width*2)] || edges.data[pi + (width*3)] == 225)
-	{	    
-	    if(edges.data[pi] == 255)
-	    {
-		var x = ((pi/4) % width)/4;
-		var y = Math.floor((pi/4)/width)/4;
-		bin.push({x:x, y:y});
-	    }
-	    if(edges.data[pi + width] == 255)
-	    {
-		var x = ((pi+ width) % width)/4;
-		var y = Math.floor((pi + width)/width)/4;
-		bin.push({x:x, y:y});
-	    }
-	    if(edges.data[pi + (width*2)] == 255)
-	    {
-		var x = ((pi+ (width*2)) % width)/4;
-		var y = Math.floor((pi + (width*2))/width)/4;
-		bin.push({x:x, y:y});
-	    }
-	    if(edges.data[pi + (width*3)] == 255)
-	    {
-		var x = ((pi+ (width*3)) % width)/4;
-		var y = Math.floor((pi + (width*3))/width)/4;
-		bin.push({x:x, y:y});
-	    }
-	}
-
-	bins.push(bin);
-
-	if(pi % width == (width - 1))
-	{
-	    pi += (width * 3);
-	}
-    }
-
-    return bins;
-}
 
 function calculateBounds(edgeBins, width, height)
 {
@@ -367,7 +266,7 @@ function calculateBounds(edgeBins, width, height)
 	}
     }
 
-    console.log(horizontalLines);
+//    console.log(horizontalLines);
 
     var verticalLines = [];
 
@@ -566,6 +465,11 @@ function mergeLines(rowIndex, lineIndex, lineArray, areHorizontalLines)
 	}
     }
 
+    if(!remove.lowestRowIndex)
+    {
+	remove.lowestRowIndex = rowIndex;
+    }
+
     var lowestRowIndex = remove.lowestRowIndex - 1;
 
     if(lineArray[lowestRowIndex] && lineArray[lowestRowIndex].length > 0)
@@ -579,14 +483,19 @@ function mergeLines(rowIndex, lineIndex, lineArray, areHorizontalLines)
 	{
 	    while(!found && nextLineInRowAbove)
 	    {
-		if(nextLineInRowAbove.finish
-		   && (nextLineInRowAbove.finish.y < line.finish.y) 
-		   && (nextLineInRowAbove.finish.y > line.start.y)
-		   && (nextLineInRowAbove.start.x < line.start.x))
+		if(nextLineInRowAbove.finish)
 		{
-		    found = true;
+		    var avgY = (line.start.y + line.finish.y) / 2;
+		    var nextAvgY = (nextLineInRowAbove.start.y + nextLineInRowAbove.finish.y)/2;
+		    var diff = avgY - nextAvgY;
+		    //var xlonger = ???
+		    if((avgY > nextAvgY)&&(diff <= 4) && (diff >= 0))
+		    {
+			found = true;
+		    }
 		}
-		else
+		
+		if(!found)
 	        {
 		    lineIndex++;
 		    nextLineInRowAbove = lineArray[lowestRowIndex][lineIndex];
