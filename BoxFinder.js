@@ -10,6 +10,9 @@ BoxFinder.prototype.findBoxes = function()
     this.boxes = [];
     this.findHorizontalLines();
     this.findVerticalLines();
+    console.log(this.horizontalLines.length);
+    this.mergeHorizontalLines();
+    console.log(this.horizontalLines.length);
 }
 
 BoxFinder.prototype.findHorizontalLines = function()
@@ -126,6 +129,99 @@ BoxFinder.prototype.findNextHorizontalLinePoint = function(bin)
     }
 
     return point;
+}
+
+BoxFinder.prototype.mergeHorizontalLines = function()
+{
+    var hasMerged = true;
+    while(hasMerged)
+    {
+	for(var lineIndex1 = 0; lineIndex1 < this.horizontalLines.length-1; lineIndex1++)
+	{
+	    var currentLine = this.horizontalLines[lineIndex1];
+
+	    for(var lineIndex2 = lineIndex1+1; lineIndex2 < this.horizontalLines.length; lineIndex2++)
+	    {		
+		var nextLine = this.horizontalLines[lineIndex2];
+
+		hasMerged = this.canMergeHorizontal(currentLine, nextLine);
+
+		if(hasMerged)
+		{
+		    if(currentLine.x2 < nextLine.x2)
+		    {
+			currentLine.x2 = nextLine.x2;
+		    }
+		    
+		    if(currentLine.x1 > nextLine.x1)
+		    {
+			currentLine.x1 = nextLine.x1;
+		    }
+
+		    if(nextLine.y1 > nextLine.y2) // going down
+		    {
+			if(currentLine.y2 < nextLine.y2)
+			{
+			    currentLine.y2 = nextLine.y2;
+			}
+			
+			if(currentLine.y1 > nextLine.y1)
+			{
+			    currentLine.y1 = nextLine.y1;
+			}
+ 		    }
+		    else
+		    {
+			if(currentLine.y2 > nextLine.y2)
+			{
+			    currentLine.y2 = nextLine.y2;
+			}
+			
+			if(currentLine.y1 < nextLine.y1)
+			{
+			    currentLine.y1 = nextLine.y1;
+			}
+		    }
+		    
+		    this.horizontalLines.splice(lineIndex2, 1);
+
+		    break;
+		}
+	    }
+
+	    if(hasMerged)
+	    {		
+		break;
+	    }
+	}
+    }
+}
+
+BoxFinder.prototype.canMergeHorizontal = function(currentLine, nextLine)
+{
+    if((Math.abs(currentLine.y2 - nextLine.y2) <= 4)&&(Math.abs(currentLine.y1 - nextLine.y1) <= 4))
+    {
+	if((currentLine.x2 >= nextLine.x2) && (currentLine.x1 <= nextLine.x1))
+	{
+	    return true;
+	}
+
+	if((currentLine.x2 <= nextLine.x2) && (currentLine.x1 >= nextLine.x1))
+	{
+	    return true;
+	}
+
+	if((currentLine.x2 < nextLine.x2) && ((Math.abs(currentLine.x2 - nextLine.x1) <= 4) || (currentLine.x2 > nextLine.x1)))
+	{
+	    return true;
+	}
+
+	if(((Math.abs(currentLine.x1 - nextLine.x2) <= 4) || (currentLine.x1 <= nextLine.x2)) && (currentLine.x2 > nextLine.x2))
+	{
+	    return true;
+	}
+    }
+    return false;
 }
 
 BoxFinder.prototype.findVerticalLines = function()
