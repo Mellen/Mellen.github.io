@@ -10,9 +10,8 @@ BoxFinder.prototype.findBoxes = function()
     this.boxes = [];
     this.findHorizontalLines();
     this.findVerticalLines();
-    console.log(this.horizontalLines.length);
     this.mergeHorizontalLines();
-    console.log(this.horizontalLines.length);
+    this.mergeVerticalLines();
 }
 
 BoxFinder.prototype.findHorizontalLines = function()
@@ -237,7 +236,7 @@ BoxFinder.prototype.findVerticalLines = function()
 
 	var line = {x1: result.p.x, x2: result.p.x,
 		    y1: result.p.y, y2: result.p.y};
- 
+	
 	for(var rowIndex = result.ri+1; rowIndex < this.edgeBins.length; rowIndex++)
 	{
 	    point = this.findNextVerticalLinePoint(columnIndex, rowIndex);
@@ -333,4 +332,122 @@ BoxFinder.prototype.findNextVerticalLinePoint = function(columnIndex, rowIndex)
     }
 
     return point;
+}
+
+BoxFinder.prototype.mergeVerticalLines = function()
+{
+    var mergeables = [];
+    var mergedIndices = [];
+    var newLines = [];
+    var hasMerged = true;
+
+    while(this.verticalLines.length > 0)
+    {
+	if(mergeables.length > 0)
+	{
+	    for(var ii = mergedIndices.length; ii >= 0; ii--)
+	    {
+		this.verticalLines.splice(mergedIndices[ii], 1);
+	    }
+	    newLines.push(this.createMergedVerticalLine(mergeables));
+	    mergeables = [];
+	    mergedIndices = [];
+	}
+
+	if(this.verticalLines.length == 0)
+	{
+	    break;
+	}
+
+	mergeables.push(this.verticalLines.splice(0, 1)[0]);
+
+	for(var lineIndex = 0; lineIndex < this.verticalLines.length; lineIndex++)
+	{
+	    var nextLine = this.verticalLines[lineIndex];
+
+	    for(var mergeIndex = 0; mergeIndex < mergeables.length; mergeIndex++)
+	    {
+		var merger = mergeables[mergeIndex];
+		hasMerged = this.canMergeVertical(merger, nextLine);
+		if(hasMerged)
+		{
+		    break;
+		}
+	    }
+
+	    if(hasMerged)
+	    {
+		mergeables.push(nextLine);
+		mergedIndices.push(lineIndex);
+	    }
+	}
+    }
+
+    if(mergeables.length > 0)
+    {
+	newLines.push(this.createMergedVerticalLine(mergeables));
+    }
+
+    this.verticalLines = newLines;
+}
+
+BoxFinder.prototype.canMergeVertical = function(currentLine, nextLine)
+{
+    if(!nextLine || !currentLine)
+    {
+	return false;
+    } 
+
+    if((Math.abs(currentLine.x2 - nextLine.x2) <= 4)&&(Math.abs(currentLine.x1 - nextLine.x1) <= 4))
+    {
+	if((currentLine.y2 >= nextLine.y2) && (currentLine.y1 <= nextLine.y1))
+	{
+	    return true;
+	}
+
+	if((currentLine.y2 <= nextLine.y2) && (currentLine.y1 >= nextLine.y1))
+	{
+	    return true;
+	}
+
+	if(((nextLine.y1 - currentLine.y2) <= 4) && (currentLine.y2 < nextLine.y1))
+	{
+	    return true;
+	}
+
+	if(((currentLine.y1 - nextLine.y2) <= 4) && (nextLine.y2 < currentLine.y1))
+	{
+	    return true;
+	}
+    }
+    
+    return false;
+}
+
+BoxFinder.prototype.createMergedVerticalLine = function(mergeables)
+{
+    console.log(mergeables.length);
+    var newLine = {x1: mergeables[0].x1, 
+		   x2: mergeables[0].x2,
+		   y1: mergeables[0].y1,
+		   y2: mergeables[0].y2};
+
+    for(var mergeIndex = 1; mergeIndex < mergeables.length; mergeIndex++)
+    {
+	var line = mergeables[mergeIndex];
+
+	if(line.y1 < newLine.y1)
+	{
+	    newLine.y1 = line.y1;
+	    newLine.x1 = line.x1;
+	}
+
+	if(line.y2 > newLine.y2)
+	{
+	    newLine.y2 = line.y2;
+	    newLine.x2 = line.x2;
+	}
+    }
+
+    return newLine;
 }
