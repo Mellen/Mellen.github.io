@@ -1,0 +1,14 @@
+p
+{
+    font-family:"BankGothic Lt BT";
+    font-size: 36pt;
+}
+
+#thekey
+{
+    font-size: 108pt;
+    border: 20px outset #e3e3e3;
+    margin: 5 0 0 0;
+    display: inline-block;
+    padding: 0px 5px;
+}
