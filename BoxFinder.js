@@ -345,7 +345,7 @@ BoxFinder.prototype.mergeVerticalLines = function()
     {
 	if(mergeables.length > 0)
 	{
-	    for(var ii = mergedIndices.length; ii >= 0; ii--)
+	    for(var ii = mergedIndices.length - 1; ii >= 0; ii--)
 	    {
 		this.verticalLines.splice(mergedIndices[ii], 1);
 	    }
@@ -359,9 +359,10 @@ BoxFinder.prototype.mergeVerticalLines = function()
 	    break;
 	}
 
-	mergeables.push(this.verticalLines.splice(0, 1)[0]);
+	mergeables.push(this.verticalLines[0]);
+	mergedIndices.push(0);
 
-	for(var lineIndex = 0; lineIndex < this.verticalLines.length; lineIndex++)
+	for(var lineIndex = 1; lineIndex < this.verticalLines.length; lineIndex++)
 	{
 	    var nextLine = this.verticalLines[lineIndex];
 
@@ -387,6 +388,8 @@ BoxFinder.prototype.mergeVerticalLines = function()
     {
 	newLines.push(this.createMergedVerticalLine(mergeables));
     }
+
+    console.log('vertical lines: '+ this.verticalLines.length);
 
     this.verticalLines = newLines;
 }
@@ -426,7 +429,6 @@ BoxFinder.prototype.canMergeVertical = function(currentLine, nextLine)
 
 BoxFinder.prototype.createMergedVerticalLine = function(mergeables)
 {
-    console.log(mergeables.length);
     var newLine = {x1: mergeables[0].x1, 
 		   x2: mergeables[0].x2,
 		   y1: mergeables[0].y1,
