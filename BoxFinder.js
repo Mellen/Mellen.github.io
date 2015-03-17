@@ -12,6 +12,7 @@ BoxFinder.prototype.findBoxes = function()
     this.findVerticalLines();
     this.mergeHorizontalLines();
     this.mergeVerticalLines();
+    this.makeBoxes();
 }
 
 BoxFinder.prototype.findHorizontalLines = function()
@@ -389,8 +390,6 @@ BoxFinder.prototype.mergeVerticalLines = function()
 	newLines.push(this.createMergedVerticalLine(mergeables));
     }
 
-    console.log('vertical lines: '+ this.verticalLines.length);
-
     this.verticalLines = newLines;
 }
 
@@ -401,24 +400,34 @@ BoxFinder.prototype.canMergeVertical = function(currentLine, nextLine)
 	return false;
     } 
 
-    if((Math.abs(currentLine.x2 - nextLine.x2) <= 4)&&(Math.abs(currentLine.x1 - nextLine.x1) <= 4))
+    if((Math.abs(currentLine.x2 - nextLine.x2) <= 4)||(Math.abs(currentLine.x1 - nextLine.x1) <= 4)||(Math.abs(currentLine.x2 - nextLine.x1) <= 4)||(Math.abs(currentLine.x1 - nextLine.x2) <= 4))
     {
-	if((currentLine.y2 >= nextLine.y2) && (currentLine.y1 <= nextLine.y1))
+	if(nextLine.y1 >= currentLine.y1 && nextLine.y2 <= currentLine.y2)
 	{
 	    return true;
 	}
 
-	if((currentLine.y2 <= nextLine.y2) && (currentLine.y1 >= nextLine.y1))
+	if(nextLine.y1 >= currentLine.y1 && nextLine.y2 >= currentLine.y2 && nextLine.y1 <= currentLine.y2)
 	{
 	    return true;
 	}
 
-	if(((nextLine.y1 - currentLine.y2) <= 4) && (currentLine.y2 < nextLine.y1))
+	if(nextLine.y1 <= currentLine.y1 && nextLine.y2 <= currentLine.y2 && nextLine.y2 >= currentLine.y1)
+	{
+	    return true;
+	} 
+
+	if(nextLine.y1 < currentLine.y1 && nextLine.y2 > currentLine.y2)
 	{
 	    return true;
 	}
 
-	if(((currentLine.y1 - nextLine.y2) <= 4) && (nextLine.y2 < currentLine.y1))
+	if(nextLine.y1 <= currentLine.y1 && nextLine.y2 <= currentLine.y1 && (currentLine.y1 - nextLine.y2) <= 4)
+	{
+	    return true;
+	}
+
+	if(nextLine.y1 >= currentLine.y2 && nextLine.y2 >= currentLine.y2 && (nextLine.y1 - currentLine.y2) <= 4)
 	{
 	    return true;
 	}
@@ -452,4 +461,204 @@ BoxFinder.prototype.createMergedVerticalLine = function(mergeables)
     }
 
     return newLine;
+}
+
+BoxFinder.prototype.makeBoxes = function()
+{
+    //dictionary of co-ordinates
+    var cornersH = {};
+    for(var hlindex in this.horizontalLines)
+    {
+	var hline = this.horizontalLines[hlindex];
+	
+	for(var distx = -2; distx < 3; distx++)
+	{
+	    for(var disty = -2; disty < 3; disty++)
+	    {
+		var x1 = hline.x1 + distx;
+		var y1 = hline.y1 + disty;
+		if(x1 >= 0 && y1 >= 0)
+		{
+		    var c1 = x1 + ',' + y1;
+		    if(typeof cornersH[c1] === 'undefined')
+		    {
+			cornersH[c1] = [hline];
+		    }
+		    else
+		    {
+			cornersH[c1].push(hline);
+		    }
+		}
+
+		var x2 = hline.x2 + distx;
+		var y2 = hline.y2 + disty;
+		if(x2 >= 0 && y2 >= 0)
+		{
+		    var c2 = x2 + ',' + y2;
+		    if(typeof cornersH[c2] === 'undefined')
+		    {
+			cornersH[c2] = [hline];
+		    }
+		    else
+		    {
+			cornersH[c2].push(hline);
+		    }
+		}
+	    }
+	}	
+    }
+
+    var cornersV = {};
+    for(var vlindex in this.verticalLines)
+    {
+	var vline = this.verticalLines[vlindex];
+	
+	for(var distx = -2; distx < 3; distx++)
+	{
+	    for(var disty = -2; disty < 3; disty++)
+	    {
+		var x1 = vline.x1 + distx;
+		var y1 = vline.y1 + disty;
+		if(x1 >= 0 && y1 >= 0)
+		{
+		    var c1 = x1 + ',' + y1;
+		    if(typeof cornersV[c1] === 'undefined')
+		    {
+			cornersV[c1] = [vline];
+		    }
+		    else
+		    {
+			cornersV[c1].push(vline);
+		    }
+		}
+
+		var x2 = vline.x2 + distx;
+		var y2 = vline.y2 + disty;
+		if(x2 >= 0 && y2 >= 0)
+		{
+		    var c2 = x2 + ',' + y2;
+		    if(typeof cornersV[c2] === 'undefined')
+		    {
+			cornersV[c2] = [vline];
+		    }
+		    else
+		    {
+			cornersV[c2].push(vline);
+		    }
+		}
+	    }
+	}	
+    }
+
+    this.boxes = [];
+
+    for(var hcoord1 in cornersH)
+    {
+	var box = {x1:0, x2:0, x3:0, x4:0, y1:0, y2:0, y3:0, y4:0};
+
+	var hlinelist1 = cornersH[hcoord1];
+
+	var vlinelist1 = cornersV[hcoord1];
+	if(typeof vlinelist1 === 'undefined')
+	{
+	    continue;
+	}
+
+	for(var vlindex in vlinelist1)
+	{    
+	    var vcoord1 = vlinelist1[vlindex].x2 + ',' + vlinelist1[vlindex].y2;
+
+	    if(this.areCloseEnough(hcoord1, vcoord1))
+	    {
+		vcoord1 = vlinelist1[vlindex].x1 + ',' + vlinelist1[vlindex].y1;
+	    }
+
+	    var hlinelist2 = cornersH[vcoord1];
+
+	    if(typeof hlinelist2 === 'undefined')
+	    {
+		continue;
+	    }
+	    
+	    for(var hlindex1 in hlinelist2)
+	    {
+		var hcoord2 = hlinelist2[hlindex1].x2 + ',' + hlinelist2[hlindex1].y2;
+		
+		if(this.areCloseEnough(hcoord2, vcoord1))
+		{
+		    hcoord2 = hlinelist2[hlindex1].x1 + ',' + hlinelist2[hlindex1].y1;
+		}
+
+		var vlinelist2 = cornersV[hcoord2];
+
+		if(typeof vlinelist2 === 'undefined')
+		{
+		    continue;
+		}
+		
+
+		var boxdupecheck = {};
+
+		for(var vlindex2 in vlinelist2)
+		{
+		    var vcoord2 = vlinelist2[vlindex2].x1 + ',' + vlinelist2[vlindex2].y1;
+		    if(this.areCloseEnough(hcoord2, vcoord2))
+		    {
+			vcoord2 = vlinelist2[vlindex2].x2 + ',' + vlinelist2[vlindex2].y2;
+		    }
+
+		    for(var hlindex2 in hlinelist1)
+		    {
+			var hcoord3 = hlinelist1[hlindex2].x1 + ',' + hlinelist1[hlindex2].y1;
+
+			if(this.areCloseEnough(hcoord3, hcoord1))
+			{
+			    hcoord3 = hlinelist1[hlindex2].x2 + ',' + hlinelist1[hlindex2].y2;
+			}
+
+			if(this.areCloseEnough(hcoord3, vcoord2))
+			{
+			    var box = this.makeBoxFromParts(hcoord1, hcoord2, vcoord1, vcoord2);
+
+			    var boxstring = box.x + ',' + box.y + ',' + box.width + ',' + box.height;
+
+			    if(typeof boxdupecheck[boxstring] === 'undefined')
+			    {
+				boxdupecheck[boxstring] = 1;
+
+				this.boxes.push(box);
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+BoxFinder.prototype.makeBoxFromParts = function(hcoord1, hcoord2, vcoord1, vcoord2)
+{
+    var hc1 = hcoord1.split(',');
+    var vc1 = vcoord1.split(',');
+    var hc2 = hcoord2.split(',');
+    var vc2 = vcoord2.split(',');
+
+    var left = Math.min.apply(null, [hc1[0], vc1[0], hc2[0], vc2[0]]);
+    var top = Math.min.apply(null, [hc1[1], vc1[1], hc2[1], vc2[1]]);
+    var right = Math.max.apply(null, [hc1[0], vc1[0], hc2[0], vc2[0]]);
+    var bottom = Math.max.apply(null, [hc1[1], vc1[1], hc2[1], vc2[1]]);
+
+    return {x:left, y:top, width: (right - left), height: (bottom - top)};
+}
+
+//tests if the coordinates are close enough to be the same
+BoxFinder.prototype.areCloseEnough = function(coord1, coord2)
+{
+    var c1 = coord1.split(',');
+    var c2 = coord2.split(',');
+
+    var p1 = {x:parseInt(c1[0], 10), y:parseInt(c1[1], 10)};
+    var p2 = {x:parseInt(c2[0], 10), y:parseInt(c2[1], 10)};
+
+    return (Math.abs(p1.x - p2.x) <= 2) && (Math.abs(p1.y - p2.y) <=2); 
 }
