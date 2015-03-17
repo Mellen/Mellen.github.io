@@ -1,8 +1,9 @@
-function BoxFinder(edgeBins, width, height)
+function BoxFinder(edgeBins, width, height, ratio)
 {
     this.edgeBins = edgeBins;
     this.width = width;
     this.height = height;
+    this.centralBoxRatio = ratio
 }
 
 BoxFinder.prototype.findBoxes = function()
@@ -13,6 +14,7 @@ BoxFinder.prototype.findBoxes = function()
     this.mergeHorizontalLines();
     this.mergeVerticalLines();
     this.makeBoxes();
+    this.selectCentralBox();
 }
 
 BoxFinder.prototype.findHorizontalLines = function()
@@ -661,4 +663,34 @@ BoxFinder.prototype.areCloseEnough = function(coord1, coord2)
     var p2 = {x:parseInt(c2[0], 10), y:parseInt(c2[1], 10)};
 
     return (Math.abs(p1.x - p2.x) <= 2) && (Math.abs(p1.y - p2.y) <=2); 
+}
+
+BoxFinder.prototype.selectCentralBox = function()
+{
+    var closeEnoughBoxes = [];
+
+    for(var bi in this.boxes)
+    {
+	var ratio = this.boxes[bi].height / this.boxes[bi].width;
+	if(Math.abs(this.ratio - ratio) < 0.009)
+	{
+	    closeEnoughBoxes.push(this.boxes[bi]);
+	}
+    }
+
+    if(closeEnoughBoxes.length == 0)
+    {
+	this.centralBox = this.boxes[0];
+    }
+    else
+    {
+	this.centralBox = closeEnoughBoxes[0];
+	for(var cbi in closeEnoughBoxes)
+	{
+	    if(closeEnoughBoxes[cbi].height > this.centralBox.height)
+	    {
+		this.centralBox = closeEnoughBoxes[cbi];
+	    }
+	}
+    }
 }

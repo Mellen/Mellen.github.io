@@ -80,44 +80,11 @@ function process()
     var edgePicker = new EdgePicker(edges, pixels, 0.25);
     edgePicker.calcEdgeBins();
 
-    var boxFinder = new BoxFinder(edgePicker.bins, canvas.width, canvas.height); 
+    var boxFinder = new BoxFinder(edgePicker.bins, canvas.width, canvas.height, patchHeightToWidthRatio); 
     boxFinder.findBoxes();
-
-    var c = 0;
-
-    var colours = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
-
-    // for(var bi = 0; bi < boxFinder.verticalLines.length; bi++)
-    // {
-    // 	var line = boxFinder.verticalLines[bi];
-    // 	ctx.beginPath();
-    // 	ctx.moveTo(line.x1, line.y1);
-    // 	ctx.lineTo(line.x2, line.y2);
-    // 	ctx.strokeStyle = colours[c % colours.length];
-    // 	ctx.stroke();
-    // 	c++;
-    // }
-
-    // for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
-    // {
-    // 	var line = boxFinder.horizontalLines[bi];
-    // 	ctx.beginPath();
-    // 	ctx.moveTo(line.x1, line.y1);
-    // 	ctx.lineTo(line.x2, line.y2);
-    // 	ctx.strokeStyle = colours[c % colours.length];
-    // 	ctx.stroke();
-    // 	c++;
-    // }
-
-    for(var bi in boxFinder.boxes)
-    {
-	var box = boxFinder.boxes[bi];
-	ctx.strokeStyle = colours[c % colours.length];
-	ctx.strokeRect(box.x, box.y, box.width, box.height);
-	c++;
-    }
-
-    console.log('c: ' + c);
+   
+    ctx.strokeStyle = '#ff0000';
+    ctx.strokeRect(boxFinder.centralBox.x, boxFinder.centralBox.y, boxFinder.centralBox.width, boxFinder.centralBox.height);
 
     ctxEdge.putImageData(edges, 0, 0);
 
