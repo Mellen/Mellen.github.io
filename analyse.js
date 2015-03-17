@@ -87,27 +87,36 @@ function process()
 
     var colours = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
 
-    for(var bi = 0; bi < boxFinder.verticalLines.length; bi++)
+    // for(var bi = 0; bi < boxFinder.verticalLines.length; bi++)
+    // {
+    // 	var line = boxFinder.verticalLines[bi];
+    // 	ctx.beginPath();
+    // 	ctx.moveTo(line.x1, line.y1);
+    // 	ctx.lineTo(line.x2, line.y2);
+    // 	ctx.strokeStyle = colours[c % colours.length];
+    // 	ctx.stroke();
+    // 	c++;
+    // }
+
+    // for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
+    // {
+    // 	var line = boxFinder.horizontalLines[bi];
+    // 	ctx.beginPath();
+    // 	ctx.moveTo(line.x1, line.y1);
+    // 	ctx.lineTo(line.x2, line.y2);
+    // 	ctx.strokeStyle = colours[c % colours.length];
+    // 	ctx.stroke();
+    // 	c++;
+    // }
+
+    for(var bi in boxFinder.boxes)
     {
-	var line = boxFinder.verticalLines[bi];
-	ctx.beginPath();
-	ctx.moveTo(line.x1, line.y1);
-	ctx.lineTo(line.x2, line.y2);
+	var box = boxFinder.boxes[bi];
 	ctx.strokeStyle = colours[c % colours.length];
-	ctx.stroke();
+	ctx.strokeRect(box.x, box.y, box.width, box.height);
 	c++;
     }
 
-    for(var bi = 0; bi < boxFinder.horizontalLines.length; bi++)
-    {
-	var line = boxFinder.horizontalLines[bi];
-	ctx.beginPath();
-	ctx.moveTo(line.x1, line.y1);
-	ctx.lineTo(line.x2, line.y2);
-	ctx.strokeStyle = colours[c % colours.length];
-	ctx.stroke();
-	c++;
-    }
     console.log('c: ' + c);
 
     ctxEdge.putImageData(edges, 0, 0);
