@@ -672,7 +672,7 @@ BoxFinder.prototype.selectCentralBox = function()
     for(var bi in this.boxes)
     {
 	var ratio = this.boxes[bi].height / this.boxes[bi].width;
-	if(Math.abs(this.ratio - ratio) < 0.009)
+	if(Math.abs(this.centralBoxRatio - ratio) < 0.009)
 	{
 	    closeEnoughBoxes.push(this.boxes[bi]);
 	}
@@ -680,7 +680,7 @@ BoxFinder.prototype.selectCentralBox = function()
 
     if(closeEnoughBoxes.length == 0)
     {
-	this.centralBox = this.boxes[0];
+	alert('Strip not found. Please hold it as horizintally as possible.');
     }
     else
     {
