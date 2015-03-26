@@ -56,9 +56,57 @@ function capture()
 
 	var patientDimensions = calcDimensions(cyanRows, pixels);
 
+	var patient = ctx.getImageData(patientDimensions.x, patientDimensions.y, patientDimensions.width, patientDimensions.height);
+
+	var patientCMYK = RGBToCMYK(patient.data);
+
+	var stripScore = calcStripScore(patientCMYK, patient.width, patient.height);
+
+	console.log(stripScore);
+
 	ctx.strokeStyle = '#ff0000';
 	ctx.strokeRect(patientDimensions.x, patientDimensions.y, patientDimensions.width, patientDimensions.height)
+
+	var x = (Math.floor(stripScore.index/4) % patient.width) + patientDimensions.x;
+	
+	ctx.moveTo(x, patientDimensions.y);
+	ctx.lineTo(x, patientDimensions.y + patientDimensions.height);
+	ctx.stroke();
+
+	level.innerHTML = stripScore.score/stripScore.average;
     }
+}
+
+function calcStripScore(pixels, width, height)
+{
+    var colourWidth = width * 4;
+
+    var bestBlack = {score:0, index:0, average:0};
+    var totalScore = 0;
+    var blackCount = 0;
+
+    for(var pi = 0; pi < pixels.length - (colourWidth*5); pi += 4)
+    {
+	var blackScore = 0;
+
+	for(var row = 0; row < 5; row++)
+	{
+	    blackScore += pixels[(pi+3)+(row * colourWidth)];
+	}
+
+	blackCount++;
+	totalScore += blackScore;
+
+	if(blackScore > bestBlack.score)
+	{
+	    bestBlack.score = blackScore;
+	    bestBlack.index = pi;
+	}
+    }
+
+    bestBlack.average = totalScore/blackCount;
+
+    return bestBlack;
 }
 
 function calcDimensions(rows, image)
@@ -147,6 +195,12 @@ function calcDimensions(rows, image)
 	}
     }
 
+    var margin = 10;
+
+    result.x = result.x + margin;
+    result.y = result.y + margin;
+    result.height = result.height - (2 * margin);
+    result.width = result.width - (3 * margin);
     return result;
 }
 
