@@ -2,21 +2,20 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
 var canEdge = document.getElementById('edges');
-var ctxEdge = canEdge.getContext('2d');
 
-//var vid = document.getElementById('vid');
-var img = document.getElementById('strip');
+var vid = document.getElementById('vid');
 var dropPercent = document.getElementById('dp');
 var level = document.getElementById('level');
 var localMediaStream = null;
 
-//arbitrary values from one particular image used to produce ratios
-var patchHeightToWidthRatio = 71/55;
+vid.addEventListener('click', capture, false);
 
-//vid.addEventListener('click', capture, false);
-img.addEventListener('click', process, false);
+var redi = 0;
+var greeni = 1;
+var bluei = 2;
+var transi = 3;
 
-/*navigator.getUserMedia = ( navigator.getUserMedia ||
+navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
                        navigator.mozGetUserMedia ||
                        navigator.msGetUserMedia);
@@ -41,132 +40,210 @@ function capture()
 {
     if(localMediaStream)
     {
-	canvas.width = vid.clientWidth;
-	canvas.height = vid.clientHeight;
-	canEdge.width = vid.clientWidth;
-	canEdge.height = vid.clientHeight;
-	ctx.drawImage(vid, 0, 0);
+	canvas.width = this.clientWidth;
+	canvas.height = this.clientHeight;
+
+	ctx.drawImage(this, 0, 0);
+
 	var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
-	var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
-	setEdges(edges, pixels);
-	edgeIndices = getEdgeMap(edges);
-	var bounds = calculateBounds(edgeIndices, canvas.width, canvas.height);
+	var original = ctx.getImageData(0,0, canvas.width, canvas.height);
+
+	var cmyk = RGBToCMYK(original.data); 
+
+	hilightCyan(pixels, cmyk, ctx);
+
+	var cyanRows = calcCyanRows(pixels.data, cmyk, pixels.width, pixels.height);
+
+	var patientDimensions = calcDimensions(cyanRows, pixels);
+
 	ctx.strokeStyle = '#ff0000';
-	for(var bi = 0; bi < bounds.length; bi++)
-	{
-	    ctx.strokeRect(bounds[bi].x1, bounds[bi].y1, bounds[bi].x2 - bounds[bi].x1, bounds[bi].y2 - bounds[bi].y1);
-	}
-	ctxEdge.putImageData(edges, 0, 0);
-
-	var ratios = calculateRatios(pixels);
-	dropPercent.innerHTML = ratios.normalised_drop_percent;
-	level.innerHTML = ratios.level;
+	ctx.strokeRect(patientDimensions.x, patientDimensions.y, patientDimensions.width, patientDimensions.height)
     }
-}*/
-
-function process()
-{
-    canvas.width = this.clientWidth;
-    canvas.height = this.clientHeight;
-    canEdge.width = this.clientWidth;
-    canEdge.height = this.clientHeight;
-
-    ctx.drawImage(this, 0, 0);
-    ctx.strokeStyle = '#ff0000';
-
-    var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
-    var edges = ctxEdge.createImageData(canEdge.width, canEdge.height);
-
-    var edgePicker = new EdgePicker(edges, pixels, 0.25);
-    edgePicker.calcEdgeBins();
-
-    var boxFinder = new BoxFinder(edgePicker.bins, canvas.width, canvas.height, patchHeightToWidthRatio); 
-    boxFinder.findBoxes();
-   
-    ctx.strokeStyle = '#ff0000';
-    ctx.strokeRect(boxFinder.centralBox.x, boxFinder.centralBox.y, boxFinder.centralBox.width, boxFinder.centralBox.height);
-
-    ctxEdge.putImageData(edges, 0, 0);
-
-    var ratios = calculateRatios(pixels);
-    dropPercent.innerHTML = ratios.normalised_drop_percent;
-    level.innerHTML = ratios.level;
 }
 
-function calculateRatios(colourField)
+function calcDimensions(rows, image)
 {
-    var w = colourField.width;
-    var h = colourField.height;
-
-    var avgs = [];
-    var rowSum = 0;
-
-    for(var i = 0, rp = 0; i < colourField.data.length; i+=4)
+    var rgb = image.data;
+    
+    var threeCounts = [];
+    for(var ri in rows)
     {
-	if(rp == w)
+	if(rows[ri].length === 3)
 	{
-	    avgs.push(rowSum/w);
-	    rowSum = 0;
-	    rp = 0;
+	    threeCounts.push(ri);
+	}
+    }
+
+    if(threeCounts.length == 0)
+    {
+	alert('Please hold the strip more horizontally');
+	return {x:0, y:0, width:0, height:0};
+    }
+
+    var result = {x:0, y:0, width:0, height:0};
+    var firstWidth = 0;
+    var secondWidth = 0;
+    var bestLeft = 0;
+    for(var tci in threeCounts)
+    {
+	var row = rows[threeCounts[tci]];
+
+	var firstBit = row[0];
+
+	var left = firstBit[firstBit.length - 1];
+	
+	var secondBit = row[1];
+
+	var right = secondBit[0];
+
+	if(firstBit.length < 10 || secondBit.length < 10)
+	{
+	    continue;
+	}
+	
+	if(right - left > result.width)
+	{
+	    bestLeft = left;
+	    result.x = left%image.width;
+	    result.width = right - left;
+	    firstWidth = firstBit.length;
+	    secondWidth = secondBit.length;
+	}
+    }
+
+    if((result.width < secondWidth)||(result.width == 0))
+    {
+	alert('Please hold the strip more horizontally');
+	return result;
+    }
+
+    
+    var startpi = (bestLeft + result.width + 10) * 4;
+
+    var width = image.width * 4;
+
+    for(var pi = startpi; pi > 0; pi -= width)
+    {
+	if(rgb[pi] + rgb[pi + 1] + rgb[pi + 2] > 0)
+	{
+	    result.y = Math.floor((pi/4)) / image.width;
+	    result.height++;
 	}
 	else
 	{
-	    rowSum += colourField.data[i];
-	    rp++
+	    break;
 	}
     }
 
-    var normAvgs = [];
-
-    var maxAvg = Math.max.apply(null, avgs);
-
-    for(var i = 0; i < avgs.length; i++)
+    for(var pi = startpi; pi < rgb.length; pi += width)
     {
-	normAvgs.push(avgs[i]/maxAvg);
-    }
-
-    var threshold = 0.5;
-
-    edgeIndices = []
-    for(var i = 0; i < normAvgs.length - 1; i++)
-    {
-	if ((normAvgs[i] <= threshold && normAvgs[i+1] > threshold) || (normAvgs[i] > threshold && normAvgs[i+1] <= threshold))
+	if(rgb[pi] + rgb[pi + 1] + rgb[pi + 2] > 0)
 	{
-	    edgeIndices.push(i);
+	    result.height++;
+	}
+	else
+	{
+	    break;
 	}
     }
 
-    if(edgeIndices.length < 4)
-    {
-	console.log('not enough edge');
-	return {normalised_drop_percent: 'none', level: 'none'};
-    }
-
-    var control = getDrop(edgeIndices[0] + 5, edgeIndices[1] - 5, normAvgs)
-    
-    var patient = getDrop(Math.floor(edgeIndices[2] + 0.50 * (edgeIndices[3] - edgeIndices[2])), Math.floor(edgeIndices[2] + 0.80 * (edgeIndices[3] - edgeIndices[2])), normAvgs);
-   
-    var ratio = patient / control * 100
-
-    console.log('patient ' + patient);
-    console.log('control ' + control);
-
-    return { 'normalised_drop_percent': ratio, 'level': Math.floor(ratio / 20.0) };
+    return result;
 }
 
-function getDrop(x, y, normAvgs)
+function calcCyanRows(pixels, cmyk, realWidth, realHeight)
 {
-    var width = y - x;
+    var result = [];
 
-    var minInControlStrip = Math.min.apply(null, normAvgs.splice(x, width));
+    var width = realWidth * 4;
 
-    var minControlPosn = normAvgs.indexOf(minInControlStrip) + x;
+    for(var rowi = 0; rowi < realHeight; rowi++)
+    {
+	var startIndex = rowi * width;
+	var row = [];
+	var section = [];
+	for(var pi = startIndex; pi < startIndex + width; pi+=4)
+	{
+	    if(pixels[pi] + pixels[pi + 1] + pixels[pi + 2] > 0)
+	    {
+		section.push(Math.floor(pi/4));
+	    }
+	    else
+	    {
+		if(section.length > 0)
+		{
+		    row.push(section);
+		    section = [];
+		}
+	    }
+	}
 
-    var controlStripHeight = normAvgs[y] - normAvgs[x];
+	result.push(row);
+    }
 
-    var proportionIntoControlStrip = (minControlPosn - x) / width;
+    return result;
+}
 
-    var calculatedValueAtMinPosn = normAvgs[x] + proportionIntoControlStrip * controlStripHeight;
+function hilightCyan(original, cmyk, context)
+{
+    for(var pi = 0; pi < cmyk.length; pi += 4)
+    {
+	var red = original.data[pi];
+	var cyan = cmyk[pi];
+	var black = cmyk[pi+3];
 
-    return (calculatedValueAtMinPosn - minInControlStrip);
+	if(((cyan - red) < 8))
+	{
+	    original.data[pi] = 0;
+	    original.data[pi + 1] = 0;
+	    original.data[pi + 2] = 0;
+	}
+    }
+}
+
+function RGBToCMYK(pixels)
+{
+    var result = new Uint8ClampedArray(pixels.length);
+
+    for(var pi = 0; pi < pixels.length; pi += 4)
+    {
+	var r = pixels[pi]/255;
+	var g = pixels[pi + 1]/255;
+	var b = pixels[pi + 2]/255;
+
+	var k = 1 - Math.max(r, g, b);
+	var c = (1-r-k)/(1-k);
+	var m = (1-g-k)/(1-k);
+	var y = (1-b-k)/(1-k);
+
+	result[pi] = Math.round(c * 255);
+	result[pi + 1] = Math.round(m * 255);
+	result[pi + 2] = Math.round(y * 255);
+	result[pi + 3] = Math.round(k * 255);
+    }
+
+    return result;
+}
+
+function CMYKToRGB(pixels)
+{
+    var result = new Uint8ClampedArray(pixels.length);
+
+    for(var pi = 0; pi < pixels.length; pi += 4)
+    {
+	var c = pixels[pi]/255;
+	var m = pixels[pi + 1]/255;
+	var y = pixels[pi + 2]/255;
+	var k = pixels[pi + 3]/255;
+
+	var r = (1-c) * (1-k);
+	var g = (1-m) * (1-k);
+	var b = (1-y) * (1-k);
+	
+	result[pi] = Math.round(r * 255);
+	result[pi + 1] = Math.round(g * 255);
+	result[pi + 2] = Math.round(b * 255);
+	result[pi + 3] = 255;
+    }
+
+    return result;
 }

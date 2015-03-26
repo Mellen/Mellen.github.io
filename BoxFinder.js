@@ -14,6 +14,7 @@ BoxFinder.prototype.findBoxes = function()
     this.mergeHorizontalLines();
     this.mergeVerticalLines();
     this.makeBoxes();
+    console.log(this.boxes.length);
     this.selectCentralBox();
 }
 
@@ -672,7 +673,7 @@ BoxFinder.prototype.selectCentralBox = function()
     for(var bi in this.boxes)
     {
 	var ratio = this.boxes[bi].height / this.boxes[bi].width;
-	if(Math.abs(this.centralBoxRatio - ratio) < 0.009)
+	if(Math.abs(this.centralBoxRatio - ratio) < 0.1)
 	{
 	    closeEnoughBoxes.push(this.boxes[bi]);
 	}
