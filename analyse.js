@@ -56,6 +56,12 @@ function capture()
 
 	var patientDimensions = calcDimensions(cyanRows, pixels);
 
+	if(patientDimensions.width == 0)
+	{
+	    dropPercent.innerHTML = 'Not found the sample';
+	    return;
+	}
+
 	var patient = ctx.getImageData(patientDimensions.x, patientDimensions.y, patientDimensions.width, patientDimensions.height);
 
 	var patientCMYK = RGBToCMYK(patient.data);
@@ -73,7 +79,8 @@ function capture()
 	ctx.lineTo(x, patientDimensions.y + patientDimensions.height);
 	ctx.stroke();
 
-	level.innerHTML = stripScore.score/stripScore.average;
+	level.innerHTML = stripScore.score + ', ' +  stripScore.average + ', ' + stripScore.stdDev;
+	dropPercent.innerHTML = stripScore.inWrongPlace ? 'Not found the sample' : 'Found the sample';
     }
 }
 
@@ -95,7 +102,7 @@ function calcStripScore(pixels, width, height)
 	}
 
 	blackCount++;
-	totalScore += blackScore;
+	totalScore += (blackScore / 5);
 
 	if(blackScore > bestBlack.score)
 	{
@@ -105,6 +112,23 @@ function calcStripScore(pixels, width, height)
     }
 
     bestBlack.average = totalScore/blackCount;
+
+    var distsFromMeanSquared = [];
+
+    for(var pi = 0; pi < pixels.length; pi+=4)
+    {
+	var black = pixels[pi];
+	distsFromMeanSquared.push((black - bestBlack.average) * (black - bestBlack.average));
+    }
+
+    bestBlack.stdDev = Math.sqrt(distsFromMeanSquared.reduce(function(a,b){return a+b;}) / distsFromMeanSquared.length);
+
+    var x = (bestBlack.index/4) % width;
+    var relativeX = x/width;
+
+    bestBlack.inWrongPlace = (relativeX < 0.45 || relativeX > 0.55)
+ 
+    
 
     return bestBlack;
 }
@@ -245,7 +269,7 @@ function hilightCyan(original, cmyk, context)
 	var cyan = cmyk[pi];
 	var black = cmyk[pi+3];
 
-	if(((cyan - red) < 8))
+	if(((cyan - red) < 24))
 	{
 	    original.data[pi] = 0;
 	    original.data[pi + 1] = 0;
