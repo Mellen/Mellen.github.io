@@ -79,7 +79,7 @@ function capture()
 	ctx.lineTo(x, patientDimensions.y + patientDimensions.height);
 	ctx.stroke();
 
-	level.innerHTML = stripScore.signal;
+	level.innerHTML = stripScore.signal / stripScore.stdDev;
 	testResult.innerHTML = stripScore.inWrongPlace ? 'Nothing found' : 'Found something';
     }
 }
@@ -88,9 +88,7 @@ function calcStripScore(pixels, width, height)
 {
     var colourWidth = width * 4;
 
-    var bestBlack = {score:0, index:0, average:0};
-    var totalScore = 0;
-    var blackCount = 0;
+    var bestBlack = {stdDev:0, score:0, signal:0, index:0, average:0};
 
     for(var pi = 0; pi < pixels.length; pi += 4)
     {
@@ -101,14 +99,25 @@ function calcStripScore(pixels, width, height)
 	    blackScore += pixels[(pi+3)+(row * colourWidth)];
 	}
 
-	blackCount++;
-	totalScore += (blackScore / 5);
+	if(Number.isNaN(blackScore))
+	{
+	    break;
+	}
 
 	if(blackScore > bestBlack.score)
 	{
 	    bestBlack.score = blackScore;
 	    bestBlack.index = pi;
 	}
+    }
+
+    var totalScore = 0;
+    var blackCount = 0;
+
+    for(var pi = 0; pi < pixels.length; pi+=4)
+    {
+	totalScore += pixels[pi+3];
+	blackCount++;
     }
 
     bestBlack.average = totalScore/blackCount;
@@ -142,6 +151,8 @@ function calcStripScore(pixels, width, height)
 	bestBlack.signal += pixels[pi + 3];
 	signalCount++;
     }
+
+    console.log('signal: ' + bestBlack.signal + ' count: ' + signalCount);
 
     bestBlack.signal = bestBlack.signal / signalCount;
 

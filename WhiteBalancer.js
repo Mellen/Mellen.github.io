@@ -81,7 +81,7 @@ WhiteBalancer.prototype.findBrightestPixel = function()
 
 WhiteBalancer.prototype.correctGamma = function()
 {
-    var gamma = 2;
+    var gamma = 4;
     for(var pi = 0; pi < this.HSV.length; pi += 4)
     {
 	this.HSV[pi+2] = Math.pow(this.HSV[pi+2], gamma);
