@@ -92,7 +92,7 @@ function calcStripScore(pixels, width, height)
     var totalScore = 0;
     var blackCount = 0;
 
-    for(var pi = 0; pi < pixels.length - (colourWidth*5); pi += 4)
+    for(var pi = 0; pi < pixels.length; pi += 4)
     {
 	var blackScore = 0;
 
@@ -127,8 +127,17 @@ function calcStripScore(pixels, width, height)
     var relativeX = x/width;
 
     bestBlack.inWrongPlace = (relativeX < 0.45 || relativeX > 0.55)
+    bestBlack.signal = 0;
  
-    
+    for(var pi = bestBlack.index; pi > 0; pi -=  colourWidth)
+    {
+	bestBlack.signal += pixels[pi + 3];
+    }
+
+    for(var pi = bestBlack.index+1; pi < pixels.length; pi +=  colourWidth)
+    {
+	bestBlack.signal += pixels[pi + 3];
+    }
 
     return bestBlack;
 }
