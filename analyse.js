@@ -4,7 +4,7 @@ var ctx = canvas.getContext('2d');
 var canEdge = document.getElementById('edges');
 
 var vid = document.getElementById('vid');
-var dropPercent = document.getElementById('dp');
+var testResult = document.getElementById('testResult');
 var level = document.getElementById('level');
 var localMediaStream = null;
 
@@ -56,9 +56,9 @@ function capture()
 
 	var patientDimensions = calcDimensions(cyanRows, pixels);
 
-	if(patientDimensions.width == 0)
+	if(patientDimensions.width == 0 || patientDimensions.height == 0)
 	{
-	    dropPercent.innerHTML = 'Not found the sample';
+	    testResult.innerHTML = 'Not found the sample';
 	    return;
 	}
 
@@ -79,8 +79,8 @@ function capture()
 	ctx.lineTo(x, patientDimensions.y + patientDimensions.height);
 	ctx.stroke();
 
-	level.innerHTML = stripScore.score + ', ' +  stripScore.average + ', ' + stripScore.stdDev;
-	dropPercent.innerHTML = stripScore.inWrongPlace ? 'Not found the sample' : 'Found the sample';
+	level.innerHTML = stripScore.signal;
+	testResult.innerHTML = stripScore.inWrongPlace ? 'Nothing found' : 'Found something';
     }
 }
 
@@ -129,15 +129,21 @@ function calcStripScore(pixels, width, height)
     bestBlack.inWrongPlace = (relativeX < 0.45 || relativeX > 0.55)
     bestBlack.signal = 0;
  
+    var signalCount = 0;
+
     for(var pi = bestBlack.index; pi > 0; pi -=  colourWidth)
     {
 	bestBlack.signal += pixels[pi + 3];
+	signalCount++;
     }
 
-    for(var pi = bestBlack.index+1; pi < pixels.length; pi +=  colourWidth)
+    for(var pi = bestBlack.index+1; pi < pixels.length; pi += colourWidth)
     {
 	bestBlack.signal += pixels[pi + 3];
+	signalCount++;
     }
+
+    bestBlack.signal = bestBlack.signal / signalCount;
 
     return bestBlack;
 }
