@@ -1,3 +1,6 @@
 [submodule "EdgeDetect"]
 	path = EdgeDetect
 	url = ../EdgeDetect
+[submodule "freecell"]
+	path = freecell
+	url = https://github.com/Mellen/freecell
