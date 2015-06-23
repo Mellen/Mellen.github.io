@@ -4,3 +4,6 @@
 [submodule "freecell"]
 	path = freecell
 	url = https://github.com/Mellen/freecell
+[submodule "snake"]
+	path = snake
+	url = https://github.com/Mellen/snakeJS
