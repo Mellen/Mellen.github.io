@@ -107,8 +107,6 @@
 		}	    
 	    }
 	}
-	
-	console.log('length: ' + image.data.length + ', width: ' + image.width + ', height: ' + image.width);
 
 	ctx.putImageData(image, 0, 0);
     }
