@@ -3,9 +3,8 @@
     "use strict";
     var canvas = document.getElementById('can');
     var ctx = canvas.getContext('2d');
+    var vid = document.getElementById('vid');
     var localMediaStream = null;
-
-    vid.addEventListener('click', capture, false);
 
     navigator.getUserMedia = ( navigator.getUserMedia ||
 			       navigator.webkitGetUserMedia ||
@@ -113,4 +112,8 @@
 
 	ctx.putImageData(image, 0, 0);
     }
+
+    vid.style.visibility = 'hidden';
+
+    setInterval(capture, 100);
 })();
