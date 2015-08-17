@@ -1,4 +1,4 @@
-(function()
+((function()
 {
     "use strict";
     var canvas = document.getElementById('can');
@@ -45,16 +45,16 @@
 
 	for(let dp = 0; dp < image.data.length; dp += 4)
 	{
-	    let red = image.data[dp];
-	    let green = image.data[dp+1];
-	    let blue = image.data[dp+2];
+	    var red = image.data[dp];
+	    var green = image.data[dp+1];
+	    var blue = image.data[dp+2];
 
-	    let rng = 32;
-	    let b = 64;
+	    var rng = 32;
+	    var b = 64;
 	    
-	    let newRed = Math.floor(red / rng) * rng;
-	    let newGreen = Math.floor(green / rng) * rng;
-	    let newBlue = Math.floor(blue / b) * b;
+	    var newRed = Math.floor(red / rng) * rng;
+	    var newGreen = Math.floor(green / rng) * rng;
+	    var newBlue = Math.floor(blue / b) * b;
 
 	    image.data[dp] = newRed;
 	    image.data[dp+1] = newGreen;
@@ -68,38 +68,38 @@
 
 	var pixelCount = pixelWidth * pixelWidth;
 
-	for(let x = 0; x < maxX; x++)
+	for(var x = 0; x < maxX; x++)
 	{
-	    for(let y = 0; y < maxY; y++)
+	    for(var y = 0; y < maxY; y++)
 	    {
-		let colourSumR = 0;
-		let colourSumG = 0;
-		let colourSumB = 0;
+		var colourSumR = 0;
+		var colourSumG = 0;
+		var colourSumB = 0;
 
-		let currentIndex = (x*pixelWidth + y*pixelWidth*image.width) * 4;
+		var currentIndex = (x*pixelWidth + y*pixelWidth*image.width) * 4;
 
-		for(let innerX = 0; innerX < pixelWidth; innerX++)
+		for(var innerX = 0; innerX < pixelWidth; innerX++)
 		{
-		    for(let innerY = 0; innerY < pixelWidth; innerY++)
+		    for(var innerY = 0; innerY < pixelWidth; innerY++)
 		    {
-			let extraIndex = (innerX + innerY * image.width) * 4;
-			let totalIndex = currentIndex + extraIndex;
+			var extraIndex = (innerX + innerY * image.width) * 4;
+			var totalIndex = currentIndex + extraIndex;
 			colourSumR += image.data[totalIndex];
 			colourSumG += image.data[totalIndex+1];
 			colourSumB += image.data[totalIndex+2];
 		    }
 		}
 
-		let avgR = Math.floor(colourSumR / pixelCount);
-		let avgG = Math.floor(colourSumG / pixelCount);
-		let avgB = Math.floor(colourSumB / pixelCount);
+		var avgR = Math.floor(colourSumR / pixelCount);
+		var avgG = Math.floor(colourSumG / pixelCount);
+		var avgB = Math.floor(colourSumB / pixelCount);
 
-		for(let innerX = 0; innerX < pixelWidth; innerX++)
+		for(var innerX = 0; innerX < pixelWidth; innerX++)
 		{
-		    for(let innerY = 0; innerY < pixelWidth; innerY++)
+		    for(var innerY = 0; innerY < pixelWidth; innerY++)
 		    {
-			let extraIndex = (innerX + innerY * image.width) * 4;
-			let totalIndex = currentIndex + extraIndex;
+			var extraIndex = (innerX + innerY * image.width) * 4;
+			var totalIndex = currentIndex + extraIndex;
 			image.data[totalIndex] = avgR;
 			image.data[totalIndex+1] = avgG;
 			image.data[totalIndex+2] = avgB;
@@ -114,4 +114,6 @@
     vid.style.visibility = 'hidden';
 
     setInterval(capture, 100);
+    return true;
 })();
+
