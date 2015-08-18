@@ -43,7 +43,7 @@
     {
 	var image = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-	for(let dp = 0; dp < image.data.length; dp += 4)
+	for(var dp = 0; dp < image.data.length; dp += 4)
 	{
 	    var red = image.data[dp];
 	    var green = image.data[dp+1];
