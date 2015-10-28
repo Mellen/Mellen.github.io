@@ -9,4 +9,4 @@
 	url = https://github.com/Mellen/snakeJS
 [submodule "jsia"]
 	path = jsia
-        url = https://github.com/Mellen/jsia
+	url = https://github.com/Mellen/jsia
