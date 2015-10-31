@@ -3,7 +3,7 @@
      var img = document.getElementById('jsiaImg');
 
      var canvas = document.getElementById('canv');
-     canvas.width = img.width;
+     canvas.width = img.width*2;
      canvas.height = img.height*3;
      var context = canvas.getContext('2d');
 
@@ -51,4 +51,7 @@
 
      var invertedData = jsia.imageDataInvertedColour(data, false);
      context.putImageData(invertedData, 0, img.height*2);
+
+     var edgeData = jsia.detectEdgePixels(data, 16);
+     context.putImageData(edgeData, img.width, 0);
 }());
