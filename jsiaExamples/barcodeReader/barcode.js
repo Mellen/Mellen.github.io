@@ -5,7 +5,7 @@
 
      var vid = document.getElementById('vid');
      
-     jsia.setupVideoCallback(vid, capture, 10);
+     jsia.setupVideoCallback(vid, capture, 500);
 
      function capture()
      {
@@ -16,16 +16,64 @@
 	 
 	 var data = ctx.getImageData(0, 0, vid.clientWidth, vid.clientHeight);
 
-	 detectBarcode(data);
-     }
+	 var coords = detectBarcode(data);
 
-     var lastX = 0;
-     var lastY = 0;
+	 var startIndex = jsia.xyToIndex(0, coords.y, data.width);
+
+	 var threshold = 24;
+
+	 var widths = [];
+	 var currentX = 0;
+	 var currentWidth = 1;
+
+	 for(var i = startIndex+4; i < startIndex + (data.width*4); i += 4)
+	 {
+	     if(currentWidth == 0)
+	     {
+		 currentWidth = 1;
+		 continue;
+	     }
+
+	     var pixel = Math.max(data.data[i], Math.max(data.data[i+1], data.data[i+2]));
+	     var lastPixel = Math.max(data.data[(i-4)], Math.max(data.data[(i-4)+1], data.data[(i-4)+2]));
+
+	     if(Math.abs(pixel - lastPixel) < threshold)
+	     {
+		 currentWidth++;
+	     }
+	     else
+	     {
+		 var width = {x: currentX, width:currentWidth};
+		 widths.push(width);
+		 currentX = jsia.indexToXY(i, data.width).x;
+		 currentWidth = 0;
+	     }
+	 }
+
+	 if(widths.length >= 60)
+	 {
+	     console.log(widths);
+
+	     for(var i = 0; i < widths.length; i++)
+	     {
+
+		 if(i % 2 == 0)
+		 {
+		     ctx.fillStyle = '#ff0000';
+		 }
+		 else
+		 {
+		     ctx.fillStyle = '#00ff00';
+		 }
+		 ctx.fillRect(widths[i].x, coords.y-3, widths[i].width, 6);
+		 
+	     }
+ 	 }
+     }
 
      function detectBarcode(imageData)
      {
 	 var edges = jsia.detectEdgePixels(imageData, 32);
-	 ctx.putImageData(edges, 0, 0);
 	 
 	 var barcode = {x:0, y:0, width:0, height:0};
 
@@ -65,9 +113,6 @@
 
 	 barcode.width = squaresize;
 	 barcode.height = squaresize;
-
-	 ctx.fillStyle = '#ff0000';
-	 ctx.fillRect(barcode.x, barcode.y, barcode.width, barcode.height);
 
 	 return barcode;
      }
