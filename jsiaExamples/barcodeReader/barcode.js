@@ -5,7 +5,7 @@
 
      var vid = document.getElementById('vid');
      
-     jsia.setupVideoCallback(vid, capture, 500);
+     jsia.setupVideoCallback(vid, capture, 150);
 
      function capture()
      {
@@ -14,11 +14,16 @@
 	     
 	 ctx.drawImage(vid, 0, 0);
 	 
-	 var data = ctx.getImageData(0, 0, vid.clientWidth, vid.clientHeight);
+	 var imageData = ctx.getImageData(0, 0, vid.clientWidth, vid.clientHeight);
 
-	 var coords = detectBarcode(data);
+	 var coords = detectBarcode(imageData);
+	 
+	 var parts = calculateBarcodeLines(coords, imageData);
+     }
 
-	 var startIndex = jsia.xyToIndex(0, coords.y, data.width);
+     function calculateBarcodeLines(coords, imageData)
+     {
+	 var startIndex = jsia.xyToIndex(0, coords.y, imageData.width);
 
 	 var threshold = 24;
 
@@ -26,7 +31,7 @@
 	 var currentX = 0;
 	 var currentWidth = 1;
 
-	 for(var i = startIndex+4; i < startIndex + (data.width*4); i += 4)
+	 for(var i = startIndex+4; i < startIndex + (imageData.width*4); i += 4)
 	 {
 	     if(currentWidth == 0)
 	     {
@@ -34,8 +39,8 @@
 		 continue;
 	     }
 
-	     var pixel = Math.max(data.data[i], Math.max(data.data[i+1], data.data[i+2]));
-	     var lastPixel = Math.max(data.data[(i-4)], Math.max(data.data[(i-4)+1], data.data[(i-4)+2]));
+	     var pixel = Math.max(imageData.data[i], Math.max(imageData.data[i+1], imageData.data[i+2]));
+	     var lastPixel = Math.max(imageData.data[(i-4)], Math.max(imageData.data[(i-4)+1], imageData.data[(i-4)+2]));
 
 	     if(Math.abs(pixel - lastPixel) < threshold)
 	     {
@@ -45,30 +50,59 @@
 	     {
 		 var width = {x: currentX, width:currentWidth};
 		 widths.push(width);
-		 currentX = jsia.indexToXY(i, data.width).x;
+		 currentX = jsia.indexToXY(i, imageData.width).x;
 		 currentWidth = 0;
 	     }
 	 }
 
-	 if(widths.length >= 60)
+	 if(widths.length >= 58)
 	 {
-	     console.log(widths);
-
+	     var widthSum = 0;
 	     for(var i = 0; i < widths.length; i++)
 	     {
+		 widthSum += widths[i].width;
+	     }
 
-		 if(i % 2 == 0)
+	     var averageWidth = widthSum / widths.length;
+
+	     var i = widths.length-1;
+	     while(widths.length > 0 && i >= 0)
+	     {
+		 if(i > widths.length)
 		 {
-		     ctx.fillStyle = '#ff0000';
+		     i--;
+		 }
+
+		 if(widths[i].width < (averageWidth*4))
+		 {
+		     i--;
 		 }
 		 else
 		 {
-		     ctx.fillStyle = '#00ff00';
+		     widths.splice(i, 1);
 		 }
-		 ctx.fillRect(widths[i].x, coords.y-3, widths[i].width, 6);
+	     }
+
+	     if(widths.length >= 58)
+	     {
+		 for(var i = 0; i < widths.length; i++)
+		 {
+		     if(i % 2 == 0)
+		     {
+			 ctx.fillStyle = '#ff0000';
+		     }
+		     else
+		     {
+			 ctx.fillStyle = '#00ff00';
+		     }
+		     ctx.fillRect(widths[i].x, coords.y-3, widths[i].width, 6);
+		 }
 		 
+		 return widths;
 	     }
  	 }
+
+	 return null;
      }
 
      function detectBarcode(imageData)
