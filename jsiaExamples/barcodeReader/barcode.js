@@ -21,40 +21,307 @@
 	 var coords = detectBarcode(imageData);
 	 
 	 var parts = calculateBarcodeLines(coords, imageData);
+
+	 if(parts != null)
+	 {
+	     var number = calculateNumber(parts);
+	 }
+     }
+
+     var codeNumberMap = 
+	 {
+	     '3-2-1-1': 0,
+	     '2-2-2-1': 1,
+	     '2-1-2-2': 2,
+	     '1-4-1-1': 3,
+	     '1-1-3-2': 4,
+	     '1-2-3-1': 5,
+	     '1-1-1-4': 6,
+	     '1-3-1-2': 7,
+	     '1-2-1-3': 8,
+	     '3-1-1-2': 9,
+	 };
+
+     var forwardDecisionTree = 
+	 {
+	     '1': 
+	     {
+		 '1':
+		 {
+		     '1':
+		     {
+			 '4': 6
+		     },
+		     '3'
+		     {
+			 '2': 4
+		     }
+		 },
+		 '2':
+		 {
+		     '1':
+		     {
+			 '3': 8 
+		     },
+		     '3':
+		     {
+			 '1': 5
+		     }
+		 },
+		 '3':
+		 {
+		     '1':
+		     {
+			 '2': 7
+		     }
+		 },
+		 '4':
+		 {
+		     '1':
+		     {
+			 '1': 3
+		     }
+		 }
+	     },
+	     '2':
+	     {
+		 '1':
+		 {
+		     '2':
+		     {
+			 '2': 2
+		     }		     
+		 },
+		 '2':
+		 {
+		     '2':
+		     {
+			 '1': 1
+		     }
+		 }
+	     },
+	     '3'
+	     {
+		 '1':
+		 {
+		     '1':
+		     {
+			 '2': 9
+		     }
+
+		 },
+		 '2':
+		 {
+		     '1':
+		     {
+			 '1': 0
+		     }
+		 }
+	     }
+	 };
+
+     var backwardsDecisionTree = 
+	 {
+	     '1':
+	     {
+		 '1':
+		 {
+		     '2':
+		     {
+			 '3': 0
+		     },
+		     '4':
+		     {
+			 '1': 3
+		     }
+		 },
+		 '2':
+		 {
+		     '2':
+		     {
+			 '2': 1
+		     }
+		 },
+		 '3':
+		 {
+		     '2':
+		     {
+			 '1': 5
+		     }
+		 }
+	     },
+	     '2':
+	     {
+		 '1':
+		 {
+		     '1':
+		     {
+			 '3': 9
+		     },
+		     '3':
+		     {
+			 '1': 7
+		     }
+		 },
+		 '2':
+		 {
+		     '1':
+		     {
+			 '2': 2
+		     }
+		 },
+		 '3':
+		 {
+		     '1':
+		     {
+			 '1': 4
+		     }
+		 }
+	     },
+	     '3':
+	     {
+		 '1':
+		 {
+		     '2':
+		     {
+			 '1': 8
+		     }
+		 }
+	     },
+	     '4':
+	     {
+		 '1':
+		 {
+		     '1':
+		     {
+			 '1': 6
+		     }
+		 }
+	     }
+	 };
+
+     function calculateNumber(parts)
+     {
+	 var lefts = [];
+
+	 var totalWidth = parts.reduce(function(inp, acc) { return acc + inp.width; });
+	 var maxBlackSingle = Math.max(parts[0].width, Math.max(parts[2].width, Math.max(parts[parts.length-1].width, parts[parts.length - 3].width)));
+	 var minBlackSingle = Math.min(parts[0].width, Math.min(parts[2].width, Math.min(parts[parts.length-1].width, parts[parts.length - 3].width)));
+	 var maxWhiteSingle = Math.max(parts[1].width, parts[parts.length-2].width);
+	 var minWhiteSingle = Math.min(parts[1].width, parts[parts.length-2].width); 
+
+	 console.log('getting left number');
+	 for(var i = 3; i < 27; i+=4)
+	 {
+	     lefts.push(getNumber([parts[i], parts[i+1], parts[i+2], parts[i+3]], totalWidth, maxBlackSingle, minBlackSingle, maxWhiteSingle, minWhiteSingle, i));
+	 }  
+
+	 var rights = [];
+
+	 console.log('getting right number');
+	 for(var i = 32; i < 56; i+=4)
+	 {
+	     rights.push(getNumber([parts[i], parts[i+1], parts[i+2], parts[i+3]], totalWidth, maxBlackSingle, minBlackSingle, maxWhiteSingle, minWhiteSingle, i));
+	 }  
+
+	 console.log(lefts.concat(rights));
+     }
+
+     function getNumber(parts, totalWidth, maxBlackSingle, minBlackSingle, maxWhiteSingle, minWhiteSingle, temp)
+     {
+
+	 var codeParts = ['f', 'f', 'f', 'f'];
+
+	 codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?maxBlackSingle:maxWhiteSingle));
+	 codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?maxBlackSingle:maxWhiteSingle));
+	 codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?maxBlackSingle:maxWhiteSingle));
+	 codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?maxBlackSingle:maxWhiteSingle));
+
+	 codeParts = bringCodePartsIntoBounds(codeParts);
+
+	 console.log('1 ' + codeParts);
+
+	 var code = codeParts.join('-');
+
+	 var number = codeNumberMap[code];
+
+	 if(typeof number == 'undefined')
+	 {
+	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?minBlackSingle:minWhiteSingle));
+
+	     codeParts = bringCodePartsIntoBounds(codeParts);
+	     console.log('2 ' + codeParts);
+
+	     code = codeParts.join('-');
+
+	     number = codeNumberMap[code];
+	 }
+
+	 if(typeof number == 'undefined')
+	 {
+	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?maxBlackSingle:maxWhiteSingle));
+	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?maxBlackSingle:maxWhiteSingle));
+	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?minBlackSingle:minWhiteSingle));
+
+	     codeParts = bringCodePartsIntoBounds(codeParts);
+	     console.log('3 ' + codeParts);
+
+	     code = codeParts.join('-');
+
+	     number = codeNumberMap[code];
+	 }
+
+	 if(typeof number == 'undefined')
+	 {
+	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?maxBlackSingle:maxWhiteSingle));
+	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?minBlackSingle:minWhiteSingle));
+	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?maxBlackSingle:maxWhiteSingle));
+
+	     codeParts = bringCodePartsIntoBounds(codeParts);
+	     console.log('4 ' + codeParts);
+	     
+	     code = codeParts.join('-');
+
+	     number = codeNumberMap[code];
+	 }
+
+	 if(typeof number == 'undefined')
+	 {
+	     number = null;
+	 }
+
+	 return number;
+     }
+
+     function bringCodePartsIntoBounds(codeParts)
+     {
+	 for(var i = 0; i < codeParts.length; i++)
+	 {
+	     if(codeParts[i] == 0)
+	     {
+		 codeParts[i] = 1;
+	     }
+	     else if(codeParts[i] > 4)
+	     {
+		 codeParts[i] = 4;
+	     }
+	 }
+	 return codeParts;
      }
 
      function calculateBarcodeLines(coords, imageData)
      {
-	 var startIndex = jsia.xyToIndex(coords.x, coords.y, imageData.width);
-	 var endIndex = jsia.xyToIndex(coords.x + imageData.width*0.10, coords.y, imageData.width);
-
-	 var pixelMin = 255;
-	 var pixelMax = 0;
-
-	 for(var i = startIndex; i <= endIndex; i+=4)
-	 {
-	     var max = Math.max(imageData.data[i], Math.max(imageData.data[i+1], imageData.data[i+2]));
-	     var min = Math.min(imageData.data[i], Math.min(imageData.data[i+1], imageData.data[i+2]));
-	     if(max > pixelMax)
-	     {
-		 pixelMax = max;
-	     }
-
-	     if(min < pixelMin)
-	     {
-		 pixelMin = min;
-	     }
-	 }
-
-	 var average = (pixelMin + pixelMax)/2;
-	 console.log('average: ' + average);
-
-	 startIndex = jsia.xyToIndex(0, coords.y, imageData.width);
+	 var startIndex = jsia.xyToIndex(0, coords.y, imageData.width);
 
 	 for(var i = startIndex; i < startIndex + (imageData.width*4); i += 4)
 	 {
 	     var pixel = Math.min(imageData.data[i], Math.min(imageData.data[i+1], imageData.data[i+2]));
-	     if(pixel > average+10)
+	     if(pixel > 96)
 	     {
 		 imageData.data[i] = 255;
 		 imageData.data[i+1] = 255;
@@ -88,19 +355,40 @@
 
 	     if(pixel != lastPixel)
 	     {
-		 var width = {x: currentX, width:currentWidth};
+		 var width = {x: currentX, width:currentWidth, isblack:pixel==0};
 		 widths.push(width);
 		 currentX = jsia.indexToXY(i, imageData.width).x;
 		 currentWidth = 0;
 	     }
 	 }
 
+/*	 for(var i = 0; i < widths.length; i++)
+	 {
+	     if(i % 2 == 0)
+	     {
+		 ctx.fillStyle = '#ff0000';
+	     }
+	     else
+	     {
+		 ctx.fillStyle = '#00ff00';
+	     }
+	     ctx.fillRect(widths[i].x, coords.y-3, widths[i].width, 6);
+	 }*/
+	 
 	 if(widths.length >= 59)
 	 {
 	     widths = removeAboveAverage(widths);
 	     if(typeof widths != 'undefined')
 	     {
 		 widths = removeAboveAverage(widths);
+		 if(typeof widths != 'undefined')
+		 {
+		     widths = removeAboveAverage(widths);
+		 }
+		 else
+		 {
+		     return null;
+		 }
 	     }
 	     else
 	     {
@@ -138,7 +426,7 @@
 
 		 for(var i = 0; i < indexGroups.length; i++)
 		 {
-		     if(indexGroups[i].length >= 59)
+		     if(indexGroups[i].length == 59)
 		     {
 			 selectedGroup = i;
 		     }
@@ -167,12 +455,11 @@
 			 ctx.fillRect(newWidths[i].x, coords.y-3, newWidths[i].width, 6);
 		     }
 
-		 canvas2.width = canvas.width;
-		 canvas2.height = canvas.height;
-		 var id = ctx.getImageData(0, 0, imageData.width, imageData.height);
-		 ctx2.putImageData(id, 0, 0);
+		     canvas2.width = canvas.width;
+		     canvas2.height = canvas.height;
+		     var id = ctx.getImageData(0, 0, imageData.width, imageData.height);
+		     ctx2.putImageData(id, 0, 0);
 
-		 
 		     return newWidths;
 		 }
 	     }
