@@ -41,17 +41,22 @@
 	 context.putImageData(data, centre.x - 7, centre.y - 7);
      }
 
-     var data = jsia.getImageDataFromImg(img);
+     var loader = function()
+     {
+	 var data = jsia.getImageDataFromImg(img);
 
-     var greyData = jsia.imageDataToGreyScale(data, true);
-     context.putImageData(greyData, 0, 0);
+	 var greyData = jsia.imageDataToGreyScale(data, true);
+	 context.putImageData(greyData, 0, 0);
 
-     var greyDarkData = jsia.imageDataToGreyScale(data, false);
-     context.putImageData(greyDarkData, 0, img.height);
+	 var greyDarkData = jsia.imageDataToGreyScale(data, false);
+	 context.putImageData(greyDarkData, 0, img.height);
 
-     var invertedData = jsia.imageDataInvertedColour(data, false);
-     context.putImageData(invertedData, 0, img.height*2);
+	 var invertedData = jsia.imageDataInvertedColour(data, false);
+	 context.putImageData(invertedData, 0, img.height*2);
 
-     var edgeData = jsia.detectEdgePixels(data, 16);
-     context.putImageData(edgeData, img.width, 0);
+	 var edgeData = jsia.detectEdgePixels(data, 16);
+	 context.putImageData(edgeData, img.width, 0);
+     };
+
+     img.onload = loader;
 }());
