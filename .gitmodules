@@ -10,3 +10,6 @@
 [submodule "jsia"]
 	path = jsia
 	url = https://github.com/Mellen/jsia
+[submodule "projectTideGuide"]
+	path = projectTideGuide
+	url = https://github.com/Mellen/projectTideGuide
