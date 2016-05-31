@@ -1,0 +1,37 @@
+.hint
+{
+    font-style: italic;
+    font-size: small;
+}
+
+body
+{
+    font-family: arial;
+    background-color: #25aabe;
+}
+
+section
+{
+    color: #D9D9D9;
+    margin: 1em;
+    padding: 1em;
+    background-color: rgba(48, 48, 48, 0.6);
+    width:60em;
+}
+
+section h2
+{
+    color: #fff;
+}
+
+section img
+{
+    width: 8em;
+    margin: 0.5em;
+    cursor: pointer;
+}
+
+section img:active
+{
+    width:inherit;
+}
