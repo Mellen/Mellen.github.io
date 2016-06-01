@@ -10,3 +10,6 @@
 [submodule "jsia"]
 	path = jsia
 	url = https://github.com/Mellen/jsia
+[submodule "showyourworking"]
+	path = showyourworking
+	url = https://github.com/Mellen/showyourworking
