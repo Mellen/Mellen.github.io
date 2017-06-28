@@ -162,4 +162,29 @@
 	 }
 
      }
+
+     var fu = document.getElementById('fileImage');
+     fu.addEventListener('change', function(fe)
+			 {
+			     var img = new Image();
+			     var reader = new FileReader();
+
+			     reader.onload = function(re)
+			     {
+				img.src = re.target.result;
+			     };
+			     
+			     reader.readAsDataURL(fe.target.files[0]);
+
+			     img.onload = function(ie)
+			     {
+				 ctx.drawImage(this, 0, 0);
+				 
+				 if(!running)
+				 {
+				     running = true;
+				     requestAnimationFrame(step);
+				 }
+			     };
+			 });
  })();
