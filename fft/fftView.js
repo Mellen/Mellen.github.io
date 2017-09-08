@@ -1,20 +1,20 @@
 (()=>
  {
-     
+
      function* signalGenerator(maxX)
      {
 	 var x = 0;
 	 while(x < maxX)
 	 {
 	     var realX = x/(maxX/10);
-	     var point = {x:x, y: maxX - Math.exp(-realX)*maxX};
+	     var point = {x:x, y: Math.exp(-realX)};
 	     yield point;
 	     x++;
 	 }	 
      }
 
-     var timePoints = signalGenerator(300);
-     
+     var timePoints = signalGenerator(256);
+
      function plotTime(points)
      {
 	 var canvas = document.getElementById('timeChart');
@@ -25,7 +25,7 @@
 	 ctx.beginPath();
 	 while(!point.done) 
 	 {
-	     ctx.lineTo(point.value.x, point.value.y);
+	     ctx.lineTo(point.value.x, canvas.height - (point.value.y * canvas.height));
 	     try
 	     {
 		 point = points.next();
@@ -40,5 +40,5 @@
      }
 
      plotTime(timePoints);
-     
+
  })();
