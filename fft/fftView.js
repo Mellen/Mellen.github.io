@@ -13,7 +13,8 @@
 	 }	 
      }
 
-     var timePoints = signalGenerator(256);
+     var timePoints = signalGenerator(255);
+     var tpa = [];
 
      function plotTime(points)
      {
@@ -22,6 +23,8 @@
 
 	 var point = points.next();
 
+	 tpa.push(point.y);
+	 
 	 ctx.beginPath();
 	 while(!point.done) 
 	 {
@@ -29,6 +32,7 @@
 	     try
 	     {
 		 point = points.next();
+		 tpa.push(point.y);
 	     }
 	     catch(e)
 	     {
@@ -41,4 +45,7 @@
 
      plotTime(timePoints);
 
+     var freqPoints = FFT(tpa);
+
+     console.log(freqPoints);
  })();
