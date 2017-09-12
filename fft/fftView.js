@@ -10,10 +10,10 @@
 	     var point = {x:x, y: Math.exp(-realX)};
 	     yield point;
 	     x++;
-	 }	 
+	 }
      }
 
-     var timePoints = signalGenerator(255);
+     var timePoints = signalGenerator(256);
      var tpa = [];
 
      function plotTime(points)
@@ -22,8 +22,8 @@
 	 var ctx = canvas.getContext('2d');
 
 	 var point = points.next();
-
-	 tpa.push(point.y);
+	 
+	 tpa.push(point.value.y);
 	 
 	 ctx.beginPath();
 	 while(!point.done) 
@@ -32,7 +32,7 @@
 	     try
 	     {
 		 point = points.next();
-		 tpa.push(point.y);
+		 tpa.push(point.value.y);
 	     }
 	     catch(e)
 	     {
@@ -47,5 +47,19 @@
 
      var freqPoints = FFT(tpa);
 
-     console.log(freqPoints);
+     function plotFrequency(freqPoints)
+     {
+	 var canvas = document.getElementById('frequencyChart');
+	 var ctx = canvas.getContext('2d');
+
+	 ctx.beginPath();
+	 for(let point of freqPoints)
+	 {
+	     ctx.moveTo(point.x, canvas.height);
+	     ctx.lineTo(point.x, canvas.height-(point.y*255));
+	 }
+	 ctx.stroke();
+     }
+
+     plotFrequency(freqPoints);
  })();

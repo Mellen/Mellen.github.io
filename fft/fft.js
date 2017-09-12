@@ -1,57 +1,105 @@
 FFT = (function()
        {
-	   function fft(series)
+	   function ComplexNumber(real, imaginary)
 	   {
-	       return ditfft(series, series.length, 1);
+	       this.real = real;
+	       this.imaginary = imaginary;
 	   }
 
-	   function ditfft(series, count, stride)
+	   ComplexNumber.prototype.toString = function()
 	   {
-	       if(count === 1)
+	       return '(' + this.real + ' + i' + this.imaginary + ')';
+	   }
+
+	   ComplexNumber.prototype.magnitude = function()
+	   {
+	       var r2 = this.real * this.real;
+	       var i2 = this.imaginary * this.imaginary;
+	       return Math.sqrt(r2+i2);
+	   };
+
+	   ComplexNumber.prototype.simpleMultiply = function(simple)
+	   {
+	       return new ComplexNumber(this.real * simple, this.imaginary * simple);
+	   };
+
+	   ComplexNumber.prototype.add = function(rhs)
+	   {
+	       return new ComplexNumber(this.real + rhs.real, this.imaginary + rhs.imaginary);
+	   }
+
+	   ComplexNumber.prototype.minus = function(rhs)
+	   {
+	       return new ComplexNumber(this.real - rhs.real, this.imaginary - rhs.imaginary);
+	   }
+	   
+	   function fft(series)
+	   {
+	       var yValues = ditfft(series, series.length, 1);
+	       var output = [];
+	       var x = 0;
+	       for(let yValue of yValues)
 	       {
-		   return series;
+		   console.log(''+yValue);
+		   output.push({x:x, y:yValue.magnitude()});
+		   x++;
+	       }
+	       return output;
+	   }
+
+	   const f = function(i, length, series, t)
+	   {
+	       var offset;
+	       if(i >= length/2)
+	       {
+		   offset = i - (length/2);
 	       }
 	       else
 	       {
-	/*	   var left = ditfft(series, count/2, stride*2);
-		   var right = ditfft(series.slice(s), count/2, stride*2);
+		   offset = i + (length/2);
+	       }
+	       let real = Math.cos((Math.PI*i)/(length/2));
+	       let imaginary = -Math.sin((Math.PI*i)/(length/2));
+	       let k = new ComplexNumber(real, imaginary);
+	       k = k.simpleMultiply(series[offset]);
+	       k = t.add(k);
+	       return k;
+	   };
 
-		   var new_series = left.concat(right);
+	   const g = function(i, length, series, t)
+	   {
+	       var offset;
+	       if(i >= length/2)
+	       {
+		   offset = i - (length/2);
+	       }
+	       else
+	       {
+		   offset = i + (length/2);
+	       }
+	       let real = Math.cos((Math.PI*i)/(length/2));
+	       let imaginary = -Math.sin((Math.PI*i)/(length/2));
+	       let k = new ComplexNumber(real, imaginary);
+	       k = k.simpleMultiply(series[offset]);
+	       k = t.minus(k);
+	       return k;
+	   };
+	   
+	   function ditfft(series, length, stride)
+	   {
+	       if(length === 1)
+	       {
+		   return [new ComplexNumber(series[0], 0)];
+	       }
+	       else
+	       {
+		   var indicies = generateIndicies(length);
+		   var transforms = generateTransforms(length);
+		   var new_series = new Array(length);
 
-		   for(var i = 0; i < (count/2)-1; i++)
+		   for(var i = 0; i < length; i++)
 		   {
-		       var t = new_series[i];
-		       new_series[i] = t + (-Math.exp(Math.PI*2*(i/count))*new_series[i+(count/2)]);
-		       new_series[i + (count/2)] = t - (-Math.exp(Math.PI*2*(i/count))*new_series[i+(count/2)]);
-		   }
-
-		   return new_series;
-		   }*/
-
-		   var indicies = generateIndicies(count);
-		   var new_series = new Array(count).fill(0);
-
-		   var x = 1;
-		   
-		   while(x < count)
-		   {
-		       if(x === 1)
-		       {
-			   var temp_series = [series[0], series[count-1]]
-		       }
-		       else
-		       {
-			   
-		       }
-
-		       for(var i = 0; i < temp_series.length; i++)
-		       {
-			   var t = temp_series[i];
-			   new_series[i] = t + (-Math.exp(Math.PI*2*(i/x))*new_series[i+(x/2)]);
-			   new_series[i + (x/2)] = t - (-Math.exp(Math.PI*2*(i/x))*new_series[i+(x/2)]);
-		       }
-		       
-		       x = x << 1;
+		       new_series[i] = doTransforms(transforms[i], series, length, indicies[i]);
 		   }
 	       
 		   return new_series;
@@ -98,6 +146,47 @@ FFT = (function()
 	       }
 	       return indicies;
 	   }
-	   
+
+	   function generateTransforms(length)
+	   {
+	       var allTransforms = [];
+	       var powerOf2 = getPowerOf2(length);
+	       var parts = [];
+	       for(var i = 0; i < powerOf2; i++)
+	       {
+		   parts.unshift(Math.pow(2, i));
+	       }
+	       for(var i = 0; i < length; i++)
+	       {
+		   let k = i;
+		   let transforms = [];
+		   for(let part of parts)
+		   {
+		       if(k >= part)
+		       {
+			   transforms.unshift(g);
+			   k -= part;
+		       }
+		       else
+		       {
+			   transforms.unshift(f);
+		       }
+		   }
+		   
+		   allTransforms.push(transforms);
+	       }
+	       return allTransforms;
+	   }
+
+	   function doTransforms(transforms, series, length, index)
+	   {
+	       var result = new ComplexNumber(series[index], 0);
+	       for(let transform of transforms)
+	       {
+		   result = transform(index, length, series, result);
+	       }
+	       return result;
+	   }
+
 	   return fft;
        })();
