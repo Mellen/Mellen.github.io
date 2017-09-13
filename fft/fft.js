@@ -18,10 +18,52 @@ FFT = (function()
 	       return Math.sqrt(r2+i2);
 	   };
 
+	   ComplexNumber.prototype.phase = function()
+	   {
+	       var phase = Math.atan(this.real/this.imaginary);
+
+	       if(this.real < 0)
+	       {
+		   if(this.imaginary >= 0)
+		   {
+		       phase += Math.PI;
+		   }
+		   else
+		   {
+		       phase -= Math.PI;
+		   }
+	       }
+	       else if(this.real === 0)
+	       {
+		   if(this.imaginary > 0)
+		   {
+		       phase = Math.PI;
+		   }
+
+		   else if(this.imaginary < 0)
+		   {
+		      phase = -Math.PI;
+		   }
+	       }
+
+	       return phase;	      
+	   }
+
 	   ComplexNumber.prototype.simpleMultiply = function(simple)
 	   {
 	       return new ComplexNumber(this.real * simple, this.imaginary * simple);
 	   };
+
+	   ComplexNumber.prototype.multiply = function(rhs)
+	   {
+	       var first = this.real * rhs.real;
+	       var outer = this.real * rhs.imaginary;
+	       var inner = this.imaginary * rhs.imaginary;
+	       var last = this. imaginary * rhs.imaginary;
+	       var newReal = first - last;
+	       var newImaginary = inner + outer;
+	       return new ComplexNumber(newReal, newImaginary);
+	   }
 
 	   ComplexNumber.prototype.add = function(rhs)
 	   {
@@ -35,75 +77,60 @@ FFT = (function()
 	   
 	   function fft(series)
 	   {
-	       var yValues = ditfft(series, series.length, 1);
+	       var yValues = ditfft(series);
 	       var output = [];
 	       var x = 0;
 	       for(let yValue of yValues)
 	       {
-		   console.log(''+yValue);
-		   output.push({x:x, y:yValue.magnitude()});
+		   output.push({x:x, y:yValue});
 		   x++;
 	       }
 	       return output;
 	   }
 
-	   const f = function(i, length, series, t)
+	   function ditfft(series)
 	   {
-	       var offset;
-	       if(i >= length/2)
-	       {
-		   offset = i - (length/2);
-	       }
-	       else
-	       {
-		   offset = i + (length/2);
-	       }
-	       let real = Math.cos((Math.PI*i)/(length/2));
-	       let imaginary = -Math.sin((Math.PI*i)/(length/2));
-	       let k = new ComplexNumber(real, imaginary);
-	       k = k.simpleMultiply(series[offset]);
-	       k = t.add(k);
-	       return k;
-	   };
+	       var newSeries = bitReverseCopy(series);
 
-	   const g = function(i, length, series, t)
-	   {
-	       var offset;
-	       if(i >= length/2)
-	       {
-		   offset = i - (length/2);
-	       }
-	       else
-	       {
-		   offset = i + (length/2);
-	       }
-	       let real = Math.cos((Math.PI*i)/(length/2));
-	       let imaginary = -Math.sin((Math.PI*i)/(length/2));
-	       let k = new ComplexNumber(real, imaginary);
-	       k = k.simpleMultiply(series[offset]);
-	       k = t.minus(k);
-	       return k;
-	   };
-	   
-	   function ditfft(series, length, stride)
-	   {
-	       if(length === 1)
-	       {
-		   return [new ComplexNumber(series[0], 0)];
-	       }
-	       else
-	       {
-		   var indicies = generateIndicies(length);
-		   var transforms = generateTransforms(length);
-		   var new_series = new Array(length);
-
-		   for(var i = 0; i < length; i++)
-		   {
-		       new_series[i] = doTransforms(transforms[i], series, length, indicies[i]);
-		   }
+	       var logLength = Math.log(series.length);
 	       
-		   return new_series;
+	       for(let i = 1; i < logLength; i++)
+	       {
+		   let twoPower = Math.pow(2, i);
+		   let real = Math.cos(Math.PI/(twoPower/2))
+		   let imaginary = Math.sin(Math.PI/(twoPower/2))
+		   let wm = new ComplexNumber(real,imaginary);
+		   wm = wm.simpleMultiply(-1);
+		   for(let k = 0; k < series.length; k += twoPower)
+		   {
+		       let w = new ComplexNumber(1, 0);
+		       for(let j = 0; j < twoPower/2; j++)
+		       {
+			   let t = w.multiply(newSeries[k + j + twoPower/2]);
+			   let u = newSeries[k + j];
+			   newSeries[k + j + twoPower/2] = u.add(t);
+			   newSeries[k + j] = u.minus(t);
+			   w = w.multiply(wm);
+		       }
+		   }
 	       }
+	       
+	       return newSeries;
+	   }
+
+	   function bitReverseCopy(series)
+	   {
+	       var newSeries = new Array(series.length)
+
+	       var powerOf2 = getPowerOf2(series.length);
+	       	       
+	       for(var i = 0; i < series.length; i++)
+	       {
+		   let revi = reverseInteger(i, powerOf2-1);
+		   newSeries[revi] = new ComplexNumber(series[i].real, series[i].imaginary);
+	       }
+	       
+	       return newSeries;
 	   }
 
 	   function getPowerOf2(num)
@@ -122,6 +149,11 @@ FFT = (function()
 	   // alteration of https://stackoverflow.com/a/746203/204723 by https://stackoverflow.com/users/18528/matt-j
 	   function reverseInteger(inp, power)
 	   {
+	       if(power === undefined)
+	       {
+		   throw "power is undefined. reverseInterger does not have a default value for this parameter.";
+	       }
+	       
 	       var reverse = inp & 1;
 	       
 	       for (inp >>= 1; inp; inp >>= 1)
@@ -134,59 +166,7 @@ FFT = (function()
 	       return reverse;
 	   }
 	   
-	   function generateIndicies(length)
-	   {
-	       var indicies = new Array(length);
 
-	       var powerOf2 = getPowerOf2(length);
-
-	       for(var i = 0; i < length; i++)
-	       {
-		   indicies[i] = reverseInteger(i, powerOf2-1);
-	       }
-	       return indicies;
-	   }
-
-	   function generateTransforms(length)
-	   {
-	       var allTransforms = [];
-	       var powerOf2 = getPowerOf2(length);
-	       var parts = [];
-	       for(var i = 0; i < powerOf2; i++)
-	       {
-		   parts.unshift(Math.pow(2, i));
-	       }
-	       for(var i = 0; i < length; i++)
-	       {
-		   let k = i;
-		   let transforms = [];
-		   for(let part of parts)
-		   {
-		       if(k >= part)
-		       {
-			   transforms.unshift(g);
-			   k -= part;
-		       }
-		       else
-		       {
-			   transforms.unshift(f);
-		       }
-		   }
-		   
-		   allTransforms.push(transforms);
-	       }
-	       return allTransforms;
-	   }
-
-	   function doTransforms(transforms, series, length, index)
-	   {
-	       var result = new ComplexNumber(series[index], 0);
-	       for(let transform of transforms)
-	       {
-		   result = transform(index, length, series, result);
-	       }
-	       return result;
-	   }
-
+	   fft.ComplexNumber = ComplexNumber;
 	   return fft;
        })();
