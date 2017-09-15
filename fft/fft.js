@@ -78,13 +78,7 @@ FFT = (function()
 	   function fft(series)
 	   {
 	       var yValues = ditfft(series);
-	       var output = [];
-	       var x = 0;
-	       for(let yValue of yValues)
-	       {
-		   output.push({x:x, y:yValue});
-		   x++;
-	       }
+	       var output = yValues.map((cur, i) => ({x:i, y:cur}));
 	       return output;
 	   }
 

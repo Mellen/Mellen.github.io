@@ -6,18 +6,17 @@
 	 var x = 0;
 	 while(x < maxX)
 	 {
-	     var real = Math.cos(Math.PI * (x/maxX));
-	     var imaginary = Math.sin(Math.PI * (x/maxX));
+	     var real = Math.exp(-x/(maxX/2));
+	     var imaginary = 0;
 	     var y = new FFT.ComplexNumber(real, imaginary);
-	     y = y.simpleMultiply(-1);
 	     var point = {x:x, y:y};
 	     yield point;
 	     x++;
 	 }
      }
 
-     var timePoints = signalGenerator(512);
-     var tpa = [];
+     var timePoints = signalGenerator(128)
+     var tpa = []
 
      function plotTime(points)
      {
@@ -31,7 +30,7 @@
 	 ctx.beginPath();
 	 while(!point.done) 
 	 {
-	     ctx.lineTo(point.value.x, (point.value.y.phase() * canvas.height));
+	     ctx.lineTo(10+point.value.x, 1.1*canvas.height-(point.value.y.real*canvas.height));
 
 	     try
 	     {
@@ -49,6 +48,11 @@
 
      plotTime(timePoints);
 
+     var zerofill = new Array(128);
+     zerofill.fill(new FFT.ComplexNumber(0,0));
+
+     tpa = tpa.concat(zerofill);
+     
      var freqPoints = FFT(tpa);
 
      function plotFrequency(freqPoints)
@@ -59,8 +63,7 @@
 	 ctx.beginPath();
 	 for(let point of freqPoints)
 	 {
-	     ctx.moveTo(point.x, canvas.height);
-	     ctx.lineTo(point.x, canvas.height-(point.y.phase()*64));
+	     ctx.lineTo(point.x, canvas.height-(point.y.magnitude()*32));
 	 }
 	 ctx.stroke();
      }
