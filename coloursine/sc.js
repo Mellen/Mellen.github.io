@@ -4,14 +4,14 @@
      var context = canvas.getContext('2d');
      var TWOPI = 2 * Math.PI;
 
-     var start = [Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256)];
+     var start = [Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256)];
 
      var r = 0;
      var g = 1;
      var b = 2;
      var a = 3;
 
-     var up = [(start[r]<255), (start[g]<255), (start[b]<255), (start[a]<255)];
+     var up = [(start[r]<255), (start[g]<255), (start[b]<255)];
      
      function step(ts)
      {
@@ -22,15 +22,14 @@
 	     let y = (i/4) / id.width;
 	     let red = getPointInWave(start[r], x, id.width);
 	     let blue = getPointInWave(start[b], y, id.height);
-	     let green = getPointInWave(start[g], x+y, id.width+id.height);
-	     let alpha = getPointInWave(start[a], y, id.height);
+	     let green = getPointInWave(start[g], id.height-y, id.height);
 	     id.data[i] = red;
 	     id.data[i+g] = green;
 	     id.data[i+b] = blue;
-	     id.data[i+a] = 255;//alpha;
+	     id.data[i+a] = 255;
 	 }
 
-	 for(let i = 0; i < 4; i++)
+	 for(let i = 0; i < start.length; i++)
 	 {
 	     if(up[i])
 	     {
@@ -66,7 +65,7 @@
      {
 	 var c1 = ((colour+extra)/(255+length))*TWOPI;
 	 var sined = Math.sin(c1);
-	 var result = Math.floor(sined * 256)+127;
+	 var result = Math.floor(sined * 256)+255;
 	 return result;
      }
 
