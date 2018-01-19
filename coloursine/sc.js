@@ -21,9 +21,9 @@
 	 {
 	     let x = (i/4) % id.width;
 	     let y = (i/4) / id.width;
-	     let red = getPointInWave(start[r], x, id.width);
-	     let blue = getPointInWave(start[b], y, id.height);
-	     let green = getPointInWave(start[g], id.height-y, id.height);
+	     let red = getPointInWave(start[r], y, id.height);
+	     let blue = getPointInWave(start[b], id.height-y, id.height);
+	     let green = getPointInWave(start[g], Math.abs((id.height/2)-y), id.height);
 	     id.data[i] = red;
 	     id.data[i+g] = green;
 	     id.data[i+b] = blue;
