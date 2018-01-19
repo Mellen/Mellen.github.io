@@ -12,10 +12,11 @@
      var a = 3;
 
      var up = [(start[r]<255), (start[g]<255), (start[b]<255)];
+
+     var id = context.getImageData(0, 0, canvas.width, canvas.height);
      
      function step(ts)
      {
-	 var id = context.getImageData(0, 0, canvas.width, canvas.height);
 	 for(let i = 0; i < id.data.length; i+=4)
 	 {
 	     let x = (i/4) % id.width;
