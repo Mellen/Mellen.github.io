@@ -4,6 +4,8 @@
      var ctx = canvas.getContext('2d');
      var canvas2 = document.getElementById('canvas2');
      var ctx2 = canvas2.getContext('2d');
+     
+     var numberOut = document.getElementById('number');
 
      var vid = document.getElementById('vid');
      
@@ -52,7 +54,7 @@
 		     {
 			 '4': 6
 		     },
-		     '3'
+		     '3':
 		     {
 			 '2': 4
 		     }
@@ -100,7 +102,7 @@
 		     }
 		 }
 	     },
-	     '3'
+	     '3':
 	     {
 		 '1':
 		 {
@@ -200,6 +202,29 @@
 	     }
 	 };
 
+     function getMinMaxProp(obj)
+     {
+	 var max = '0';
+	 var min = '5';
+	 for(var p in obj)
+	 {
+	     if(obj.hasOwnProperty(p))
+	     {
+		 if(p > max)
+		 {
+		     max = p;
+		 }
+
+		 if(p < min)
+		 {
+		     min = p;
+		 }
+	     }
+	 }
+
+	 return {'max': max, 'min': min};
+     }
+
      function calculateNumber(parts)
      {
 	 var lefts = [];
@@ -224,94 +249,125 @@
 	     rights.push(getNumber([parts[i], parts[i+1], parts[i+2], parts[i+3]], totalWidth, maxBlackSingle, minBlackSingle, maxWhiteSingle, minWhiteSingle, i));
 	 }  
 
-	 console.log(lefts.concat(rights));
+	 checkDigit = getCheckDigit(lefts.concat(rights));
+
+	 numberOut.textContent = lefts.concat(rights).join('') + ' check digit: ' + checkDigit;
+     }
+
+     function getCheckDigit(digits)
+     {
+	 var oddSum = 0;
+
+	 for(var i= 0; i < digits.length; i+=2)
+	 {
+	     oddSum += digits[i];
+	 }
+
+	 var check = oddSum * 3;
+
+	 var evenSum = 0;
+
+	 for(var i = 1; i < digits.length - 1; i+=2)
+	 {
+	     evenSum += digits[i];
+	 }
+
+	 check += evenSum;
+
+	 check = check % 10;
+
+	 check = 10 - check;
+
+	 return check;
      }
 
      function getNumber(parts, totalWidth, maxBlackSingle, minBlackSingle, maxWhiteSingle, minWhiteSingle, temp)
      {
+	 var maxwidth = Math.max(parts[0].width, Math.max(parts[1].width, Math.max(parts[2].width, parts[3].width)));
+	 var minwidth = Math.min(parts[0].width, Math.min(parts[1].width, Math.min(parts[2].width, parts[3].width)));
 
-	 var codeParts = ['f', 'f', 'f', 'f'];
+	 bigRatio = [Math.round(maxwidth/parts[0].width).toString(), Math.round(maxwidth/parts[1].width).toString(), Math.round(maxwidth/parts[2].width).toString(), Math.round(maxwidth/parts[3].width).toString()];
+	 smallRatio = [Math.round(parts[0].width/minwidth).toString(), Math.round(parts[1].width/minwidth).toString(), Math.round(parts[2].width/minwidth).toString(), Math.round(parts[3].width/minwidth).toString()];
 
-	 codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?maxBlackSingle:maxWhiteSingle));
-	 codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?maxBlackSingle:maxWhiteSingle));
-	 codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?maxBlackSingle:maxWhiteSingle));
-	 codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?maxBlackSingle:maxWhiteSingle));
+	 smallErr = 0;
 
-	 codeParts = bringCodePartsIntoBounds(codeParts);
+	 var next = forwardDecisionTree[smallRatio[0]];
 
-	 console.log('1 ' + codeParts);
-
-	 var code = codeParts.join('-');
-
-	 var number = codeNumberMap[code];
-
-	 if(typeof number == 'undefined')
+	 if(typeof next === 'undefined')
 	 {
-	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?minBlackSingle:minWhiteSingle));
-
-	     codeParts = bringCodePartsIntoBounds(codeParts);
-	     console.log('2 ' + codeParts);
-
-	     code = codeParts.join('-');
-
-	     number = codeNumberMap[code];
-	 }
-
-	 if(typeof number == 'undefined')
-	 {
-	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?maxBlackSingle:maxWhiteSingle));
-	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?maxBlackSingle:maxWhiteSingle));
-	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?minBlackSingle:minWhiteSingle));
-
-	     codeParts = bringCodePartsIntoBounds(codeParts);
-	     console.log('3 ' + codeParts);
-
-	     code = codeParts.join('-');
-
-	     number = codeNumberMap[code];
-	 }
-
-	 if(typeof number == 'undefined')
-	 {
-	     codeParts[0] = Math.round(parts[0].width/(parts[0].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[1] = Math.round(parts[1].width/(parts[1].isblack?maxBlackSingle:maxWhiteSingle));
-	     codeParts[2] = Math.round(parts[2].width/(parts[2].isblack?minBlackSingle:minWhiteSingle));
-	     codeParts[3] = Math.round(parts[3].width/(parts[3].isblack?maxBlackSingle:maxWhiteSingle));
-
-	     codeParts = bringCodePartsIntoBounds(codeParts);
-	     console.log('4 ' + codeParts);
-	     
-	     code = codeParts.join('-');
-
-	     number = codeNumberMap[code];
-	 }
-
-	 if(typeof number == 'undefined')
-	 {
-	     number = null;
-	 }
-
-	 return number;
-     }
-
-     function bringCodePartsIntoBounds(codeParts)
-     {
-	 for(var i = 0; i < codeParts.length; i++)
-	 {
-	     if(codeParts[i] == 0)
+	     var minmax = getMinMaxProp(forwardDecisionTree);
+	     if(smallRatio[0] > minmax.max)
 	     {
-		 codeParts[i] = 1;
+		 next = forwardDecisionTree[minmax.max];
 	     }
-	     else if(codeParts[i] > 4)
+	     else
 	     {
-		 codeParts[i] = 4;
+		 next = forwardDecisionTree[minmax.min];
 	     }
+
+	     smallErr = 1;
 	 }
-	 return codeParts;
+
+	 var last = next;
+
+	 next = next[smallRatio[1]];
+	 
+	 if(typeof next === 'undefined')
+	 {
+	     var minmax = getMinMaxProp(last);
+	     if(smallRatio[1] > minmax.max)
+	     {
+		 next = last[minmax.max];
+	     }
+	     else
+	     {
+		 next = last[minmax.min];
+	     }
+
+	     smallErr++;
+	 }
+
+	 last = next;
+
+	 next = next[smallRatio[2]];
+	 
+	 if(typeof next === 'undefined')
+	 {
+	     var minmax = getMinMaxProp(last);
+	     if(smallRatio[2] > minmax.max)
+	     {
+		 next = last[minmax.max];
+	     }
+	     else
+	     {
+		 next = last[minmax.min];
+	     }
+
+	     smallErr++;
+	 }
+
+	 last = next;
+
+	 next = next[smallRatio[3]];
+	 
+	 if(typeof next === 'undefined')
+	 {
+	     var minmax = getMinMaxProp(last);
+	     if(smallRatio[3] > minmax.max)
+	     {
+		 next = last[minmax.max];
+	     }
+	     else
+	     {
+		 next = last[minmax.min];
+	     }
+
+	     smallErr++;
+	 }	 
+
+	 console.log(smallErr);
+
+	 return next;
      }
 
      function calculateBarcodeLines(coords, imageData)
@@ -361,19 +417,6 @@
 		 currentWidth = 0;
 	     }
 	 }
-
-/*	 for(var i = 0; i < widths.length; i++)
-	 {
-	     if(i % 2 == 0)
-	     {
-		 ctx.fillStyle = '#ff0000';
-	     }
-	     else
-	     {
-		 ctx.fillStyle = '#00ff00';
-	     }
-	     ctx.fillRect(widths[i].x, coords.y-3, widths[i].width, 6);
-	 }*/
 	 
 	 if(widths.length >= 59)
 	 {
