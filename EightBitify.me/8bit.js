@@ -6,16 +6,7 @@
     var vid = document.getElementById('vid');
     var localMediaStream = null;
 
-    navigator.getUserMedia = ( navigator.getUserMedia ||
-			       navigator.webkitGetUserMedia ||
-			       navigator.mozGetUserMedia ||
-			       navigator.msGetUserMedia);
-
-
-    if(navigator.getUserMedia)
-    {
-	var um = navigator.getUserMedia({video: true}, handleVid, vidErr);
-    }
+    var um = navigator.mediaDevices.getUserMedia({video: true}).then(handleVid).catch(vidErr);
 
     function handleVid(stream)
     {
