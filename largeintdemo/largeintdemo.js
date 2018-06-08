@@ -1,4 +1,4 @@
-import { LargeInt } from '../LargeInt/LargeInt.js';
+import { LargeInt } from '../LargeInt/largeint.js';
 (function()
  {
      var a = new LargeInt('1234');
