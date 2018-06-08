@@ -13,3 +13,6 @@
 [submodule "showyourworking"]
 	path = showyourworking
 	url = https://github.com/Mellen/showyourworking
+[submodule "LargeInt"]
+	path = LargeInt
+	url = https://github.com/Mellen/LargeInt.git
