@@ -13,4 +13,16 @@ import LargeInt from '../LargeInt/largeint.js';
 
 				 document.getElementById('lblResult').innerHTML = cInt.toString();
 			     });
+     var btnSubtract = document.getElementById('btnSubtract');
+     btnSubtract.addEventListener('click', function(e)
+			     {
+				 var a = document.getElementById('txtA').value;
+				 var b = document.getElementById('txtB').value;
+
+				 var aInt = new LargeInt(a);
+				 var bInt = new LargeInt(b);
+				 var cInt = aInt.subtract(bInt);
+
+				 document.getElementById('lblResult').innerHTML = cInt.toString();
+			     });
  })();
