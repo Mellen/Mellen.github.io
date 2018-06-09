@@ -31,7 +31,10 @@ import LargeInt from '../LargeInt/largeint.js';
 				 var a = document.getElementById('txtA').value;
 				 var b = document.getElementById('txtB').value;
 
-				 let result = a.greaterThan(b) ? a.toString() : b.toString()
+				 var aInt = new LargeInt(a);
+				 var bInt = new LargeInt(b);
+
+				 let result = aInt.greaterThan(bInt) ? aInt.toString() : bInt.toString()
 
 				 document.getElementById('lblResult').innerHTML = result;
 			     });
@@ -41,7 +44,10 @@ import LargeInt from '../LargeInt/largeint.js';
 				 var a = document.getElementById('txtA').value;
 				 var b = document.getElementById('txtB').value;
 
-				 let result = a.lessThan(b) ? a.toString() : b.toString()
+				 var aInt = new LargeInt(a);
+				 var bInt = new LargeInt(b);
+
+				 let result = aInt.lessThan(bInt) ? aInt.toString() : bInt.toString()
 
 				 document.getElementById('lblResult').innerHTML = result;
 			     });
