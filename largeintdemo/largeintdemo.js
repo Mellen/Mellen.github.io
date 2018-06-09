@@ -25,4 +25,24 @@ import LargeInt from '../LargeInt/largeint.js';
 
 				 document.getElementById('lblResult').innerHTML = cInt.toString();
 			     });
+     var btnMax = document.getElementById('btnMax');
+     btnMax.addEventListener('click', function(e)
+			     {
+				 var a = document.getElementById('txtA').value;
+				 var b = document.getElementById('txtB').value;
+
+				 let result = a.greaterThan(b) ? a.toString() : b.toString()
+
+				 document.getElementById('lblResult').innerHTML = result;
+			     });
+     var btnMin = document.getElementById('btnMin');
+     btnMin.addEventListener('click', function(e)
+			     {
+				 var a = document.getElementById('txtA').value;
+				 var b = document.getElementById('txtB').value;
+
+				 let result = a.lessThan(b) ? a.toString() : b.toString()
+
+				 document.getElementById('lblResult').innerHTML = result;
+			     });
  })();
