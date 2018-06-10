@@ -3,7 +3,7 @@
      var img = document.getElementById('jsiaImg');
 
      var canvas = document.getElementById('canv');
-     canvas.width = img.width*2;
+     canvas.width = img.width*3;
      canvas.height = img.height*3;
      var context = canvas.getContext('2d');
 
@@ -41,7 +41,7 @@
 	 context.putImageData(data, centre.x - 7, centre.y - 7);
      }
 
-     var loader = function()
+     img.addEventListener('load', function()
      {
 	 var data = jsia.getImageDataFromImg(img);
 
@@ -56,7 +56,37 @@
 
 	 var edgeData = jsia.detectEdgePixels(data, 16);
 	 context.putImageData(edgeData, img.width, 0);
-     };
 
-     img.onload = loader;
+	 console.log('pre-lines');
+	 
+	 var lines = jsia.lineDetection(data, 16, 8, 3);
+
+	 console.log(lines.length);
+
+	 var colours = ['red', 'green', 'blue', 'black'];
+	 
+	 // var line = lines[3];
+	 // console.log(line);
+	 // 		   context.beginPath();
+	 // 		   context.moveTo(line[0].x + data.width, line[0].y + data.height);
+	 // 		   line.shift();
+	 // 		   line.forEach(point => context.lineTo(point.x+ data.width, point.y+ data.height));
+	 // 		   context.stroke();
+	 
+	 lines.forEach(line =>
+	 	       {
+			   let colour = colours.pop();
+			   context.strokeStyle = colour;
+	 		   context.beginPath();
+	 		   context.moveTo(line[0].x + data.width, line[0].y + data.height);
+	 		   line.shift();
+	 		   line.forEach(point => context.lineTo(point.x+ data.width, point.y+ data.height));
+	 		   context.stroke();
+			   colours.unshift(colour);
+	 	       });
+
+	 console.log('lines done');
+	 
+     });
+
 }());
