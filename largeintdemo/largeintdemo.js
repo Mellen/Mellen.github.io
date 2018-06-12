@@ -51,4 +51,17 @@ import LargeInt from '../LargeInt/largeint.js';
 
 				 document.getElementById('lblResult').innerHTML = result;
 			     });
+     var btnTimes = document.getElementById('btnTimes');
+     btnTimes.addEventListener('click', function(e)
+			     {
+				 var a = document.getElementById('txtA').value;
+				 var b = document.getElementById('txtB').value;
+
+				 var aInt = new LargeInt(a);
+				 var bInt = new LargeInt(b);
+
+				 let result = aInt.times(bInt);
+
+				 document.getElementById('lblResult').innerHTML = result;
+			     });
  })();
