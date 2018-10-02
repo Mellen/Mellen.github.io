@@ -64,4 +64,17 @@ import LargeInt from '../LargeInt/largeint.js';
 
 				 document.getElementById('lblResult').innerHTML = result;
 			     });
+     var btnOver = document.getElementById('btnOver');
+     btnOver.addEventListener('click', function(e)
+			     {
+				 var a = document.getElementById('txtA').value;
+				 var b = document.getElementById('txtB').value;
+
+				 var aInt = new LargeInt(a);
+				 var bInt = new LargeInt(b);
+
+				 let result = aInt.over(bInt);
+
+				 document.getElementById('lblResult').innerHTML = result;
+			     });
  })();
