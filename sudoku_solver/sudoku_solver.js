@@ -33,7 +33,7 @@
 	 this.column = null;
 	 this.update_handler = null;
      }
-
+     
      Cell.prototype.set_value = function(value)
      {
 	 let value_set = false;
@@ -44,7 +44,10 @@
 	     this.row.update(this, value);
 	     this.column.update(this, value);
 	     value_set = true;
-	     this.update_handler(value);
+	     if(this.update_handler != null)
+	     {
+		 this.update_handler(value);
+	     }
 	 }
 	 return value_set;
      };
@@ -126,12 +129,52 @@
 
      Board.prototype.undo = function(cell, board_view)
      {
+	 let state = this.state.pop();
+	 while(state[0] !== cell)
+	 {
+	     state = this.state.pop();
+	 }
+
+	 let cell_index = this.cells.indexOf(cell);
+
+	 let state_board = state[1];
 	 
+	 let cell_views = board_view.getElementsByTagName('input');
+
+	 for(let text_i = 0; text_i < cell_views.length; text_i++)
+	 {
+	     let text = cell_views[text_i];
+	     text.removeEventListener('change', text.ch);
+	     let new_cell = state_board.cells[text_i];
+	     let ch = createChangeHandler(new_cell);
+	     text.addEventListener('change', ch);
+	     text.ch = ch;
+	     new_cell.update_handler = create_view_updater(text);
+	     if(new_cell.value == 0)
+	     {
+		 text.value = '';
+	     }
+	     else
+	     {
+		 text.value = new_cell.value;
+	     }
+	 }
+
+	 return [cell_index, state_board];
      }
 
      Board.prototype.save_state = function(cell)
      {
+	 let state = new Board();
+
+	 for(var cell_i = 0; cell_i < state.cells.length; cell_i++)
+	 {
+	     let new_cell = state.cells[cell_i];
+	     let cur_cell = this.cells[cell_i];
+	     new_cell.set_value(cur_cell.value);
+	 }
 	 
+	 this.state.push([cell, state]);
      }
      
      var sudoku_board = new Board();
@@ -158,7 +201,9 @@
 		 classname += ' barrier_side';
 	     }
 	     td.setAttribute('class', classname);
-	     text.addEventListener('change', createChangeHandler(cell));
+	     let ch = createChangeHandler(cell);
+	     text.addEventListener('change', ch);
+	     text.ch = ch;
 	     cell.update_handler = create_view_updater(text);
 	     td.appendChild(text);
 	     tr.appendChild(td);
@@ -174,11 +219,15 @@
 	     {
 		 if(cell.value !== Number(this.value))
 		 {
+		     let new_value = this.value;
 		     if(cell.value !== 0)
 		     {
-			 sudoku_board.undo(cell, board_view)
+			 let undo_result = sudoku_board.undo(cell, board_view);
+			 sudoku_board = undo_result[1];
+			 let cell_index = undo_result[0];
+			 cell = sudoku_board.cells[cell_index];
 		     }
-		     cell.set_value(Number(this.value));
+		     cell.set_value(Number(new_value));
 		     sudoku_board.save_state(cell);
 		 }
 	     }
