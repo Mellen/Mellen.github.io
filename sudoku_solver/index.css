@@ -1,0 +1,25 @@
+input
+{
+    width:3em;
+}
+
+table
+{
+    border-spacing: 0px;
+}
+
+td
+{
+    padding: 0px;
+    margin: 0px;
+}
+
+td.barrier_bottom
+{
+    border-bottom: 2px solid black;
+}
+
+td.barrier_side
+{
+    border-left: 2px solid black;
+}

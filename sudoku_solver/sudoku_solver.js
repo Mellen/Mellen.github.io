@@ -31,6 +31,7 @@
 	 this.square = null;
 	 this.row = null;
 	 this.column = null;
+	 this.update_handler = null;
      }
 
      Cell.prototype.set_value = function(value)
@@ -43,6 +44,7 @@
 	     this.row.update(this, value);
 	     this.column.update(this, value);
 	     value_set = true;
+	     this.update_handler(value);
 	 }
 	 return value_set;
      };
@@ -121,6 +123,16 @@
 	     square.cells.push(new_cell);
 	 }
      }
+
+     Board.prototype.undo = function(cell, board_view)
+     {
+	 
+     }
+
+     Board.prototype.save_state = function(cell)
+     {
+	 
+     }
      
      var sudoku_board = new Board();
      
@@ -133,10 +145,21 @@
 	     let cell = row.cells[cell_i];
 	     let td = document.createElement('td');
 	     let text = document.createElement('input');
-	     text.setAttribute('type', 'number');
-	     text.setAttribute('min', 0);
-	     text.setAttribute('max', 9);
+	     text.setAttribute('type', 'text');
+	     text.setAttribute('pattern', '\\d');
+	     let classname = '';
+	     if(row_i == 2 || row_i == 5)
+	     {
+		 
+		 classname = 'barrier_bottom'
+	     }
+	     if(cell_i % 3 == 0 && cell_i % 9 !== 0)
+	     {
+		 classname += ' barrier_side';
+	     }
+	     td.setAttribute('class', classname);
 	     text.addEventListener('change', createChangeHandler(cell));
+	     cell.update_handler = create_view_updater(text);
 	     td.appendChild(text);
 	     tr.appendChild(td);
 	 }
@@ -147,15 +170,35 @@
      {
 	 function updateCell(e)
 	 {
-	     if(cell.value !== 0)
+	     if(this.validity.patternMismatch === false)
 	     {
-		 sudoku_board.undo(cell, board)
+		 if(cell.value !== Number(this.value))
+		 {
+		     if(cell.value !== 0)
+		     {
+			 sudoku_board.undo(cell, board_view)
+		     }
+		     cell.set_value(Number(this.value));
+		     sudoku_board.save_state(cell);
+		 }
 	     }
-	     cell.set_value(this.value);
-	     sudoku_board.save_state();
+	     else
+	     {
+		 this.value = cell.value.toString();
+	     }
 	 }
 
 	 return updateCell;
+     }
+
+     function create_view_updater(text_box)
+     {
+	 function update_table_cell(value)
+	 {
+	     text_box.value = value;
+	 }
+
+	 return update_table_cell;
      }
      
  })();
