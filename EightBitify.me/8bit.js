@@ -10,13 +10,13 @@
 
     function handleVid(stream)
     {
-	vid.src = window.URL.createObjectURL(stream);
+	vid.srcObject = stream
 	localMediaStream = stream;
     }
 
     function vidErr(e)
     {
-	alert(e);
+	console.log(e);
     }
 
     function capture()
