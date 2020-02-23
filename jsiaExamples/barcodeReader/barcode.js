@@ -9,7 +9,7 @@
 
      var vid = document.getElementById('vid');
      
-     jsia.setupVideoCallback(vid, capture, 10);
+     jsia.setupVideoCallback(vid, capture, e => console.log(e), 10);
 
      function capture()
      {
