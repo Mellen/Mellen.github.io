@@ -3,8 +3,6 @@
      var img = document.getElementById('jsiaImg');
 
      var canvas = document.getElementById('canv');
-     canvas.width = img.width*3;
-     canvas.height = img.height*3;
      var context = canvas.getContext('2d');
 
      var coords = document.getElementById('coords');
@@ -43,6 +41,9 @@
 
      img.addEventListener('load', function()
      {
+         canvas.width = img.width*3;
+         canvas.height = img.height*3;
+
 	 var data = jsia.getImageDataFromImg(img);
 
 	 var greyData = jsia.imageDataToGreyScale(data, true);
@@ -64,15 +65,7 @@
 	 console.log(lines.length);
 
 	 var colours = ['red', 'green', 'blue', 'black'];
-	 
-	 // var line = lines[3];
-	 // console.log(line);
-	 // 		   context.beginPath();
-	 // 		   context.moveTo(line[0].x + data.width, line[0].y + data.height);
-	 // 		   line.shift();
-	 // 		   line.forEach(point => context.lineTo(point.x+ data.width, point.y+ data.height));
-	 // 		   context.stroke();
-	 
+
 	 lines.forEach(line =>
 	 	       {
 			   let colour = colours.pop();
@@ -80,7 +73,7 @@
 	 		   context.beginPath();
 	 		   context.moveTo(line[0].x + data.width, line[0].y + data.height);
 	 		   line.shift();
-	 		   line.forEach(point => context.lineTo(point.x+ data.width, point.y+ data.height));
+	 		   line.forEach(point => context.lineTo(point.x + data.width, point.y + data.height));
 	 		   context.stroke();
 			   colours.unshift(colour);
 	 	       });
