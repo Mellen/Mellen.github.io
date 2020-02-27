@@ -60,7 +60,7 @@
 
 	 console.log('pre-lines');
 	 
-	 var lines = jsia.lineDetection(data, 16, 8, 3);
+	 var lines = jsia.lineDetection(data, 16, 8, 2);
 
 	 console.log(lines.length);
 
