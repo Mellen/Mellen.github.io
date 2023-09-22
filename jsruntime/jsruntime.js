@@ -3,16 +3,16 @@
    const jslogo = new Image();
    const canvas = document.getElementById('canv');
    const ctx = canvas.getContext("2d");
-   const width = canvas.clientWidth;
+   let width = canvas.clientWidth;
    const height = canvas.clientHeight;
    canvas.width = width;
 
    const JSY = 86;
    const START = 79;
-   const FINISH = width-20-64-5;
-   const DISTANCE = FINISH-START;
-   const DELTA = DISTANCE / 1000;
-   const oneMetre = DISTANCE / 20;
+   let FINISH = width-20-64-5;
+   let DISTANCE = FINISH-START;
+   let DELTA = DISTANCE / 500;
+   let oneMetre = DISTANCE / 10;
 
    function drawScene(jsx, jsy, angle, runtime)
    {
@@ -26,7 +26,7 @@
      let mins = (Math.floor(runtime/60000)).toString().padStart(2,'0');
 
      ctx.lineWidth = 3;
-     ctx.font = "20pt sans-serif";
+     ctx.font = "20pt mono";
      ctx.strokeText(`${mins}:${secs}.${mili}`, 128, 30);
      
      ctx.fillStyle = "white";
@@ -71,8 +71,87 @@
 
    jslogo.src = 'img/js.jpg';
 
-   let starttime, endtime;
+   let starttime, endtime, lasttime, runtime;
    let x = START;
+   let doingconfetti = false;
+   let confCount = 64;
+
+   let confPoints = new Array(confCount);
+   const colours = ['red', 'yellow', 'blue', 'white'];
+   confPoints = confPoints.fill(0).map(_ => {return {x: FINISH+2.5,
+                                                     y:(JSY-jslogo.width/2)-5,
+                                                     vx:100*Math.random(),
+                                                     vy:100*Math.random(),
+                                                     colour: colours[Math.floor(Math.random()*colours.length)]}});
+   
+   function animateConfetti(timestamp)
+   {
+     if(lasttime === undefined)
+     {
+       lasttime = timestamp;
+     }
+
+     let deltaT = timestamp - lasttime;
+     const G = 9.8;
+     const airResistance = 5;
+     
+     if(deltaT > 50)
+     {
+       deltaT = deltaT/100;
+       let angle = (2*Math.PI)*((x%oneMetre)/oneMetre);
+       drawScene(x - jslogo.width/2, JSY, angle, runtime);
+       
+       lasttime = timestamp;
+       let stop = 0;
+       for(let point of confPoints)
+       {
+         let dx = point.vx * deltaT;
+         let dy = point.vy * deltaT;
+         point.y -= dy;
+         let hitground = false;
+         if(point.y >= height-5)
+         {
+           point.y = height-5;
+           stop++;
+           hitground = true;
+         }
+
+         if(!hitground)
+         {
+           point.x -= dx;
+         }
+
+         ctx.fillStyle = point.colour;
+         ctx.fillRect(point.x, point.y, 5, 5);
+         
+         point.vy -= G * deltaT;
+         
+         if(point.vx > 0)
+         {
+           point.vx -= airResistance * deltaT;
+         }
+         else
+         {
+           point.vx = 0;
+         }
+         
+       }
+
+       console.log('stop', stop);
+
+       if(stop >= confCount)
+       {
+         doingconfetti = false;
+       }
+     }
+     
+     if(doingconfetti)
+     {
+       lasttime
+       requestAnimationFrame(animateConfetti);
+     }
+   }
+   
    
    function animate(timestamp)
    {
@@ -83,7 +162,7 @@
      endtime = timestamp;
      x += DELTA;
 
-     const runtime = endtime - starttime;
+     runtime = endtime - starttime;
      
      if(x < FINISH)
      {
@@ -93,16 +172,28 @@
      }
      else
      {
+       doingconfetti = true
        gobtn.disabled = false;
+       lasttime = undefined;
+       requestAnimationFrame(animateConfetti);
      }
    }
 
    const gobtn = document.getElementById('btngo');
    gobtn.addEventListener('click', function(e)
    {
+     width = canvas.clientWidth;
+     canvas.width = width;
+     FINISH = width-20-64-5;
+     DISTANCE = FINISH-START;
+     DELTA = DISTANCE / 500;
+     oneMetre = DISTANCE / 10;
+
      x = START;
      starttime = undefined;
+     runtime = 0;
      gobtn.disabled = true;
+     doingconfetti = false;
      requestAnimationFrame(animate);
    });
      
