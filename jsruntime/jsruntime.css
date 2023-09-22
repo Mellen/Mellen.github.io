@@ -1,0 +1,15 @@
+body
+{
+    font-family:sans;
+}
+
+#canvcont
+{
+    text-align:center;
+}
+
+canvas
+{
+    width:95%;
+    height:300px;
+}
