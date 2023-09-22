@@ -78,11 +78,6 @@
 
    let confPoints = new Array(confCount);
    const colours = ['red', 'yellow', 'blue', 'white'];
-   confPoints = confPoints.fill(0).map(_ => {return {x: FINISH+2.5,
-                                                     y:(JSY-jslogo.width/2)-5,
-                                                     vx:100*Math.random(),
-                                                     vy:100*Math.random(),
-                                                     colour: colours[Math.floor(Math.random()*colours.length)]}});
    
    function animateConfetti(timestamp)
    {
@@ -175,6 +170,12 @@
        doingconfetti = true
        gobtn.disabled = false;
        lasttime = undefined;
+       confPoints = confPoints.fill(0).map(_ => {return {x: FINISH+2.5,
+                                                         y:(JSY-jslogo.width/2)-5,
+                                                         vx:100*Math.random(),
+                                                         vy:100*Math.random(),
+                                                         colour: colours[Math.floor(Math.random()*colours.length)]}});
+
        requestAnimationFrame(animateConfetti);
      }
    }
