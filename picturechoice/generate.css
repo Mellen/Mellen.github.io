@@ -1,0 +1,34 @@
+body
+{
+/*     background-image: url("bg.png");*/
+}
+
+main
+{
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: auto;
+}
+
+canvas
+{
+    border: 2px solid cyan;
+    border-radius: 4px;
+}
+
+canvas.selected
+{
+    border: 2px solid red;
+}
+
+#txtSelectCountLabel
+{
+    font:sans;
+    position: fixed;
+    top:0;
+    left:14rem;
+    background-color: #3D3D3D;
+    color: #C2C2C2;
+    padding: 0.25rem;
+    border-radius: 8px;
+}
