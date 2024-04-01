@@ -202,7 +202,7 @@
 	 {
 	     if(selectedParameters.length >= 10)
 	     {
-		 alert('Only 10 images can be selected at once. Delected one first before selecting another.');
+		 alert('Only 10 images can be selected at once. Deselected one first before selecting another.');
 	     }
 	     else
 	     {
