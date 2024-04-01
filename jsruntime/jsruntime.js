@@ -171,7 +171,7 @@
        gobtn.disabled = false;
        lasttime = undefined;
        confPoints = confPoints.fill(0).map(_ => {return {x: FINISH+2.5,
-                                                         y:(JSY-jslogo.width/2)-5,
+                                                         y:(JSY-jslogo.width/2),
                                                          vx:100*Math.random(),
                                                          vy:100*Math.random(),
                                                          colour: colours[Math.floor(Math.random()*colours.length)]}});

@@ -236,6 +236,8 @@
 	     mainElement.removeChild(child);
 	 }
 
+	 document.getElementById('btnGenerate').disabled = true;
+	 
 	 let newParameters = []
 	 
 	 for(let parami = 0; parami < selectedParameters.length; parami++)
@@ -278,6 +280,8 @@
 	 }
 
 	 selectedParameters = [];
+
+	 document.getElementById('txtSelectCount').textContent = selectedParameters.length;
 
 	 parameters = newParameters;
      }
