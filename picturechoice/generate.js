@@ -262,7 +262,7 @@
 		 {
 		     continue;
 		 }
-		 let index = parami*10 + paramj;
+		 let index = parami*10 + paramj + 1;
 		 let innerParj = selectedParameters[paramj];
 		 let innerPar = parameters[innerParj];
 		 let childProm = new Promise((resolve, reject) =>
