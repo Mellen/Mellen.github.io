@@ -1,0 +1,47 @@
+body
+{
+    font-family: sans;
+}
+
+main
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1em;
+    padding-left:0.5rem;
+    padding-right:0.5rem;
+}
+
+section
+{
+    border: 4px solid #fcf443;
+    border-radius: 0.7rem;
+    background-color:#9C59D1;
+    box-shadow: 0.2rem 0.2rem #919191;
+}
+
+.itemhead
+{
+    background-color:#fcf443;
+    color: black;
+    margin:0;
+    padding: 0.2rem;
+}
+
+.itembody
+{
+    color:white;
+    margin:0;
+    padding: 1rem;
+}
+
+.itembody a
+{
+    color: white;
+}
+
+.itembody a::before
+{
+    font-size: small;
+    content: "\1F517";
+}
