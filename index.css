@@ -3,13 +3,29 @@ body
     font-family: sans;
 }
 
-main
+@media (orientation: landscape)
 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1em;
-    padding-left:0.5rem;
-    padding-right:0.5rem;
+    main
+    {
+	font-size: 1em;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 1em;
+	padding-left:0.5rem;
+	padding-right:0.5rem;
+    }
+}
+@media (orientation: portrait)
+{
+    main
+    {
+	font-size: 2em;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1em;
+	padding-left:0.5rem;
+	padding-right:0.5rem;
+    }
 }
 
 section
